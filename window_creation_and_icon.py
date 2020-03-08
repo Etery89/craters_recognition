@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget
+from PyQt5.QtWidgets import QApplication, QWidget, QDesktopWidget
 from PyQt5.QtGui import QIcon
 
 
@@ -13,11 +13,19 @@ class Example(QWidget):
 
     def initUI(self):
 
-        self.setGeometry(300, 70, 800, 600)
+        self.resize(800, 600)
+        self.center()
         self.setWindowTitle('Craters recognition')
         self.setWindowIcon(QIcon('1492719120-moon_83629.png'))
 
         self.show()
+
+    def center(self):
+
+        qr = self.frameGeometry()
+        cp = QDesktopWidget().availableGeometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
 
 
 if __name__ == '__main__':
