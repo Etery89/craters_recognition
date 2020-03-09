@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QDesktopWidget
+from PyQt5.QtWidgets import QApplication, QWidget, QDesktopWidget, QLabel, QLineEdit
 from PyQt5.QtGui import QIcon
 
 
@@ -12,6 +12,14 @@ class Example(QWidget):
 
 
     def initUI(self):
+
+        self.lbl = QLabel(self)
+        qle = QLineEdit(self)
+        
+        qle.resize(600, 20)
+
+        qle.move(60, 60)
+        self.lbl.move(60, 40)
 
         self.resize(800, 600)
         self.center()
