@@ -1,6 +1,8 @@
 import sys
 import os
 from PySide2 import QtWidgets, QtGui, QtCore
+from PySide2.QtCore import Slot
+
 
 class MyWidget(QtWidgets.QWidget):
 
@@ -16,7 +18,6 @@ class MyWidget(QtWidgets.QWidget):
         self.layout_open = QtWidgets.QHBoxLayout()
         self.layout_open.addWidget(self.file_open_lineedit)
         self.layout_open.addWidget(self.file_open_button)
-        # self.layout_open.addStretch(0)
         
 
         #  QHBoxLayout "save file"
@@ -79,34 +80,30 @@ class MyWidget(QtWidgets.QWidget):
         self.layout_function_parth.addWidget(self.algorithm_button)
         self.layout_function_parth.addLayout(self.layout_open_table_file)
         self.layout_function_parth.addWidget(self.additional_parameters_button)
-    
-        self.setLayout(self.layout_function_parth)
 
         # QHBoxLayout "function part + image parth"
-        
+        self.image_label = QtWidgets.QLabel()
+        self.image_label.setFixedWidth(500)
 
+        self.function_with_image_layout = QtWidgets.QHBoxLayout()
+        self.function_with_image_layout.addLayout(self.layout_function_parth)
+        self.function_with_image_layout.addWidget(self.image_label)
+        self.setLayout(self.function_with_image_layout)
 
-
-
-
-
+        # Setting the main window icon
         self.setWindowTitle('Craters recognition')
         self.setWindowIcon(QtGui.QIcon('1492719120-moon_83629.png'))
 
+        # Signal buttons
+        self.file_open_button.clicked.connect(self.open_file)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+    # File open function
+    @Slot()
+    def open_file(self):
+        path_to_file, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Load Image", os.path.dirname(os.path.abspath(__file__)), "Images (*.jpg *.png *.bmp *.TIF)")
+        path_to_file_text = self.file_open_lineedit.setText(path_to_file)
+        file_image = QtGui.QPixmap(path_to_file)
+        image_to_image_lable = self.image_label.setPixmap(file_image.scaled(500, 900, QtCore.Qt.KeepAspectRatio))
 
 
 
@@ -114,7 +111,7 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication([])
 
     widget = MyWidget()
-    widget.resize(800, 600)
+    widget.resize(1024, 600)
     widget.show()
 
     sys.exit(app.exec_())
