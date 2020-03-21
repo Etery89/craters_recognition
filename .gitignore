@@ -3,8 +3,14 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+crat/
+*.tif
+*.tiff
+.vscode/
+
 # C extensions
 *.so
+
 
 # Distribution / packaging
 .Python
