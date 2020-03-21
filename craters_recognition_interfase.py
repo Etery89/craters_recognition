@@ -100,7 +100,7 @@ class MyWidget(QtWidgets.QWidget):
     # File open function
     @Slot()
     def open_file(self):
-        path_to_file, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Load Image", os.path.dirname(os.path.abspath(__file__)), "Images (*.jpg *.png *.bmp *.TIF)")
+        path_to_file, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Load Image", os.path.dirname(os.path.abspath(__file__)), "Images (*.jpg *.png *.bmp *.TIF *.TIFF)")
         path_to_file_text = self.file_open_lineedit.setText(path_to_file)
         file_image = QtGui.QPixmap(path_to_file)
         image_to_image_lable = self.image_label.setPixmap(file_image.scaled(500, 900, QtCore.Qt.KeepAspectRatio))
