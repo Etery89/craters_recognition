@@ -13,7 +13,7 @@ class MyWidget(QtWidgets.QWidget):
         super().__init__()
 
         # QHBoxLayout 'open file"
-        self.file_open_button = QtWidgets.QPushButton('Открыть изображение')
+        self.file_open_button = QtWidgets.QPushButton('Open image')
         self.file_open_lineedit = QtWidgets.QLineEdit()
 
 
@@ -23,7 +23,7 @@ class MyWidget(QtWidgets.QWidget):
         
 
         #  QHBoxLayout "save file"
-        self.file_save_button = QtWidgets.QPushButton('Сохранить изображение')
+        self.file_save_button = QtWidgets.QPushButton('Save image')
         self.file_save_lineedit = QtWidgets.QLineEdit()
 
 
@@ -32,10 +32,10 @@ class MyWidget(QtWidgets.QWidget):
         self.layout_save.addWidget(self.file_save_button)
 
         # Algorithm button
-        self.algorithm_button = QtWidgets.QPushButton('Алгоритм расчёта окружностей')
+        self.algorithm_button = QtWidgets.QPushButton('Сircle calculation')
 
         # QHBoxLayout "Open Shp file"
-        self.shp_file_open_button = QtWidgets.QPushButton('Открыть Shp-файл')
+        self.shp_file_open_button = QtWidgets.QPushButton('Open Shp-file')
         self.shp_file_open_lineedit = QtWidgets.QLineEdit()
 
         self.layout_open_shp_file = QtWidgets.QHBoxLayout()
@@ -43,20 +43,20 @@ class MyWidget(QtWidgets.QWidget):
         self.layout_open_shp_file.addWidget(self.shp_file_open_button)
         
         # Button for calculating additional parameters
-        self.additional_parameters_button = QtWidgets.QPushButton('Расчёт дополнительных параметров')
+        self.additional_parameters_button = QtWidgets.QPushButton('Сalculation of additional parameters')
 
         # QGridLayout "Parameters"
-        self.var_with_image_qlable = QtWidgets.QLabel('Переменная с изображением')
+        self.var_with_image_qlable = QtWidgets.QLabel('Image variable')
         self.var_with_image_qlineedit = QtWidgets.QLineEdit()
-        self.min_distance_centers_ql = QtWidgets.QLabel('Минимальное расстояние между центрами')
+        self.min_distance_centers_ql = QtWidgets.QLabel('Minimum distance between centers')
         self.min_distance_centers_qle = QtWidgets.QLineEdit()
-        self.parametr1_qlable = QtWidgets.QLabel('Параметр 1')
+        self.parametr1_qlable = QtWidgets.QLabel('Parameter 1')
         self.parametr1_qlineedit = QtWidgets.QLineEdit()
-        self.parametr2_qlable = QtWidgets.QLabel('Параметр 2')
+        self.parametr2_qlable = QtWidgets.QLabel('Parameter 2')
         self.parametr2_qlineedit = QtWidgets.QLineEdit()
-        self.min_search_radius_qlable = QtWidgets.QLabel('Минимальный радиус поиска')
+        self.min_search_radius_qlable = QtWidgets.QLabel('Minimum Search Radius')
         self.min_search_radius_qlineedit = QtWidgets.QLineEdit()
-        self.max_search_radius_qlable = QtWidgets.QLabel('Максимальный радиус поиска')
+        self.max_search_radius_qlable = QtWidgets.QLabel('Maximum Search Radius')
         self.max_search_radius_qlineedit = QtWidgets.QLineEdit()
 
         self.parameters_layout = QtWidgets.QGridLayout()
