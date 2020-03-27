@@ -138,5 +138,5 @@ def initial_data(mosaic_input, DTM_input, shp_output, cv_start_radius = 100, cv_
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-initial_data("APOLLO17_DTM_150CM_180_45.tif", "APOLLO17_DTM_150CM.tiff", "crat_circle.shp")
+# initial_data("APOLLO17_DTM_150CM_180_45.tif", "APOLLO17_DTM_150CM.tiff", "crat_circle.shp")
 

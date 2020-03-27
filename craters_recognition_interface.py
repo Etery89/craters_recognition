@@ -3,6 +3,8 @@ import os
 from PySide2 import QtWidgets, QtGui, QtCore
 from PySide2.QtCore import Slot
 
+from simple_cv import initial_data
+
 
 class MyWidget(QtWidgets.QWidget):
 
@@ -102,6 +104,7 @@ class MyWidget(QtWidgets.QWidget):
         self.file_open_button.clicked.connect(self.open_tiff_file)
         self.shp_file_open_button.clicked.connect(self.open_shp_file)
         self.file_save_button.clicked.connect(self.save_shp_file)
+        self.algorithm_button.clicked.connect(self.use_initial_data)
 
     # File open function
     @Slot()
@@ -123,6 +126,18 @@ class MyWidget(QtWidgets.QWidget):
     def save_shp_file(self):
         file_name = QtWidgets.QFileDialog.getSaveFileName(self, 'Save Shp-file', os.path.dirname(os.path.abspath(__file__)), 'Files (*.Shp)')
         file_name_text = self.file_save_lineedit.setText(file_name)
+
+    @Slot()
+    def use_initial_data(self):
+        call_initial_data = initial_data("APOLLO17_DTM_150CM_180_45.tif", "APOLLO17_DTM_150CM.tiff", "crat_circle.shp")
+        # call_file_shp_generation_and_saving = file_shp_generation_and_saving()
+        # demonstration_image = QtGui.QPixmap(call_file_shp_generation_and_saving)
+        # demonstration_image_to_label = self.image_label.setPixmap(demonstration_image.scaled(500, 900, QtCore.Qt.KeepAspectRatio))
+
+
+    @Slot()
+    def take_parameters(self):
+        pass
         
 
 
