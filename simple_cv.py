@@ -6,7 +6,7 @@ import ogr
 import osgeo
 import osgeo.osr as osr
 
-def initial_data(mosaic_input, DTM_input, shp_output, cv_start_radius = 100, cv_max_radius = 200, cv_param1 = 30, cv_param2 = 20, cv_min_distance = 10):
+def initial_data(mosaic_input, DTM_input, shp_output, image_output, cv_start_radius = 100, cv_max_radius = 200, cv_param1 = 30, cv_param2 = 20, cv_min_distance = 10):
     #открытие исходной мозаики
     image = cv2.imread(mosaic_input, 0)
     #cv2.imshow("Image", image)
@@ -127,7 +127,8 @@ def initial_data(mosaic_input, DTM_input, shp_output, cv_start_radius = 100, cv_
             crat_id += 1
 
     # сохраняет получившееся изображение и открывает его 
-    cv2.imwrite('detected_crat.tif',cimg)
+    
+    cv2.imwrite(image_output,cimg)
     cv2.namedWindow('Image', cv2.WINDOW_NORMAL)
     cv2.resizeWindow('Image', 600, 600)
     cv2.imshow('Image',cimg)
@@ -138,5 +139,5 @@ def initial_data(mosaic_input, DTM_input, shp_output, cv_start_radius = 100, cv_
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-initial_data("APOLLO17_DTM_150CM_180_45.tif", "APOLLO17_DTM_150CM.tiff", "crat_circle.shp")
+initial_data("APOLLO17_DTM_150CM_180_45.tif", "APOLLO17_DTM_150CM.tiff", "crat_circle.shp", 'detected_crat.tif')
 
