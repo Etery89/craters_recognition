@@ -89,7 +89,7 @@ class MyWidget(QtWidgets.QWidget):
         self.image_label.setFrameShape(QtWidgets.QFrame.Box)
         self.image_label.setFrameShadow(QtWidgets.QFrame.Sunken)
         self.image_label.setLineWidth(4)
-        
+        self.image_label.setFrameRect(QtCore.QRect(QtCore.QPoint(0, 0), QtCore.QSize(500, 430)))
 
         self.function_with_image_layout = QtWidgets.QHBoxLayout()
         self.function_with_image_layout.addLayout(self.layout_function_parth)
@@ -146,7 +146,7 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication([])
 
     widget = MyWidget()
-    widget.resize(1024, 600)
+    widget.resize(1024, 530)
     widget.show()
 
     sys.exit(app.exec_())
