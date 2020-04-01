@@ -111,7 +111,7 @@ class MyWidget(QtWidgets.QWidget):
         self.file_open_button.clicked.connect(self.open_tiff_file)
         self.shp_file_open_button.clicked.connect(self.open_shp_file)
         self.file_save_button.clicked.connect(self.save_shp_file)
-        self.algorithm_button.clicked.connect(self.use_initial_data)
+        self.algorithm_button.clicked.connect(self.take_parameters_and_use_initial_data)
 
     # File open function
     @Slot()
@@ -137,8 +137,11 @@ class MyWidget(QtWidgets.QWidget):
 
     @Slot()
     def use_initial_data(self):
-        file_open_text = self.file_open_lineedit.text()
-        print(file_open_text)
+        try:
+            var_with_image_value = int(self.var_with_image_qlineedit.text())
+        except ValueError:
+            self.var_with_image_qlineedit.clear()
+            self.program_message_field.setText('Неправильный формат данных. Введите целое число')
         # call_initial_data = initial_data("APOLLO17_DTM_150CM_180_45.tif", "APOLLO17_DTM_150CM.tiff", "crat_circle.shp")
         # call_file_shp_generation_and_saving = file_shp_generation_and_saving()
         # demonstration_image = QtGui.QPixmap(call_file_shp_generation_and_saving)
@@ -147,23 +150,48 @@ class MyWidget(QtWidgets.QWidget):
 
     @Slot()
     def take_parameters_and_use_initial_data(self):
-        var_with_image_text = int(self.var_with_image_qlineedit.text())
-        min_distance_centers_text = int(self.min_distance_centers_qle.text())
-        parametr1_text = int(self.parametr1_qlineedit.text())
-        parametr2_text = int(self.parametr2_qlineedit.text())
-        min_search_radius_text = int(self.min_search_radius_qlineedit.text())
-        max_search_radius_text = int(self.max_search_radius_qlineedit.text())
+        try:
+            var_with_image_value = int(self.var_with_image_qlineedit.text())
+        except ValueError:
+            self.var_with_image_qlineedit.clear()
+            self.program_message_field.setText('Неправильный формат данных. Введите целое число')
+        try:
+            min_distance_centers_value = int(self.min_distance_centers_qle.text())
+        except ValueError:
+            self.min_distance_centers_qle.clear()
+            self.program_message_field.setText('Неправильный формат данных. Введите целое число')
+        try:
+            parametr1_value = int(self.parametr1_qlineedit.text())
+        except ValueError:
+            self.parametr1_qlineedit.clear()
+            self.program_message_field.setText('Неправильный формат данных. Введите целое число')
+        try:
+            parametr2_value = int(self.parametr2_qlineedit.text())
+        except ValueError:
+            self.parametr2_qlineedit.clear()
+            self.program_message_field.setText('Неправильный формат данных. Введите целое число')
+        try:
+            min_search_radius_value = int(self.min_search_radius_qlineedit.text())
+        except ValueError:
+            self.min_search_radius_qlineedit.clear()
+            self.program_message_field.setText('Неправильный формат данных. Введите целое число')
+        try:
+            max_search_radius_value = int(self.max_search_radius_qlineedit.text())
+        except ValueError:
+            self.max_search_radius_qlineedit.clear()
+            self.program_message_field.setText('Неправильный формат данных. Введите целое число')
+
         file_tiff_open_text = self.file_open_lineedit.text()
         # вызов функции генерации пустого шейп-файла, для последующей передачи его в функцию основного алгоритма
-        call_initial_data = initial_data("APOLLO17_DTM_150CM_180_45.tif", file_tiff_open_text, "crat_circle.shp", var_with_image_text, min_distance_centers_text, parametr1_text, parametr2_text, min_search_radius_text, max_search_radius_text)
-        pass
+        # call_initial_data = initial_data("APOLLO17_DTM_150CM_180_45.tif", file_tiff_open_text, "crat_circle.shp", var_with_image_value, min_distance_centers_value, parametr1_value, parametr2_value, min_search_radius_value, max_search_radius_value)
+        
 
     def parameters_except(self, parameter):
         try:
             parameter_text = int(self.parameter.text())
         except TypeError:
             self.program_message_field.setText(f'Неправильный формат ввода. Вместо {parameter_text} введите целое число')
-        
+        pass
         
 
 
