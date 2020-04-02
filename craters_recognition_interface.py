@@ -125,15 +125,23 @@ class MyWidget(QtWidgets.QWidget):
         file_image = QtGui.QPixmap(path_to_file)
         image_to_image_lable = self.image_label.setPixmap(file_image.scaled(600, 800, QtCore.Qt.KeepAspectRatio))
 
+    # Функция демонстрации мозаики
+    def mosaic_demonstration(self, mosaic_image):
+        mosaic_image_pixmap = QtGui.QPixmap(mosaic_image)
+        mosaic_to_image_lable = self.image_label.setPixmap(mosaic_image_pixmap.scaled(600, 800, QtCore.Qt.KeepAspectRatio))
+
+    # Функция открытия Шейп-файла нажатием кнопки
     @Slot()
     def open_shp_file(self):
         path_to_the_shp_file, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Load Sph-file', os.path.dirname(os.path.abspath(__file__)), 'Files (*.Shp)')
         path_to_the_shp_file_text = self.shp_file_open_lineedit.setText(path_to_the_shp_file)
 
+    # Функция сохранения шейп-файла нажатием кнопки
     @Slot()
     def save_shp_file(self):
         file_name = QtWidgets.QFileDialog.getSaveFileName(self, 'Save Shp-file', os.path.dirname(os.path.abspath(__file__)), 'Files (*.Shp)')
         file_name_text = self.file_save_lineedit.setText(file_name)
+
 
     @Slot()
     def use_initial_data(self):
@@ -150,49 +158,60 @@ class MyWidget(QtWidgets.QWidget):
 
     @Slot()
     def take_parameters_and_use_initial_data(self):
+        messages_for_errors = []
         try:
             var_with_image_value = int(self.var_with_image_qlineedit.text())
         except ValueError:
             self.var_with_image_qlineedit.clear()
-            self.program_message_field.setText('Неправильный формат данных. Введите целое число')
+            messages_for_errors.append('Неправильный формат данных в поле "Image variable". Введите целое число.')
         try:
             min_distance_centers_value = int(self.min_distance_centers_qle.text())
         except ValueError:
             self.min_distance_centers_qle.clear()
-            self.program_message_field.setText('Неправильный формат данных. Введите целое число')
+            messages_for_errors.append('Неправильный формат данных в поле "Minimum distance between centers". Введите целое число.')
         try:
             parametr1_value = int(self.parametr1_qlineedit.text())
         except ValueError:
             self.parametr1_qlineedit.clear()
-            self.program_message_field.setText('Неправильный формат данных. Введите целое число')
+            messages_for_errors.append('Неправильный формат данных в поле "Parameter 1". Введите целое число.')
         try:
             parametr2_value = int(self.parametr2_qlineedit.text())
         except ValueError:
             self.parametr2_qlineedit.clear()
-            self.program_message_field.setText('Неправильный формат данных. Введите целое число')
+            messages_for_errors.append('Неправильный формат данных в поле "Parameter 2". Введите целое число.')
         try:
             min_search_radius_value = int(self.min_search_radius_qlineedit.text())
         except ValueError:
             self.min_search_radius_qlineedit.clear()
-            self.program_message_field.setText('Неправильный формат данных. Введите целое число')
+            messages_for_errors.append('Неправильный формат данных в поле "Minimum Search Radius". Введите целое число.')
         try:
             max_search_radius_value = int(self.max_search_radius_qlineedit.text())
         except ValueError:
             self.max_search_radius_qlineedit.clear()
-            self.program_message_field.setText('Неправильный формат данных. Введите целое число')
+            messages_for_errors.append('Неправильный формат данных в поле "Maximum Search Radius". Введите целое число.')
 
-        file_tiff_open_text = self.file_open_lineedit.text()
+        if len(messages_for_errors) == 0:
+            self.program_message_field.clear()
+        else:
+            self.program_message_field.setText(str(messages_for_errors))
+            
+        
         # вызов функции генерации пустого шейп-файла, для последующей передачи его в функцию основного алгоритма
         # call_initial_data = initial_data("APOLLO17_DTM_150CM_180_45.tif", file_tiff_open_text, "crat_circle.shp", var_with_image_value, min_distance_centers_value, parametr1_value, parametr2_value, min_search_radius_value, max_search_radius_value)
         
 
-    def parameters_except(self, parameter):
+    def parameters_except(self, parameter_name):
         try:
-            parameter_text = int(self.parameter.text())
+            parameter_text = int(self.parameter_name.text())
         except TypeError:
             self.program_message_field.setText(f'Неправильный формат ввода. Вместо {parameter_text} введите целое число')
         pass
-        
+
+    # функция получения имени открытого DTM(TIFF)-файла
+    def get_DTM(self):
+        file_tiff_open_text = self.file_open_lineedit.text()
+        return file_tiff_open_text
+
 
 
 
