@@ -15,14 +15,14 @@ from numpy import cos
 from numpy import sqrt
 from numpy import zeros
 from numpy import uint8
-#from shapes import circles
+
 
 
 
 
 DTM_input = "GLD100_test.tif"
     
-    # созданиие мозаики
+    # созданиие массива мозаики
 def hillshade(array, azimuth, angle_altitude): 
     x, y = gradient(array)
     slope = pi/2. - arctan(sqrt(x*x + y*y))
@@ -35,15 +35,14 @@ def hillshade(array, azimuth, angle_altitude):
     + cos(altituderad) * cos(slope)\
     * cos(azimuthrad - aspect)
     return 255*(shaded + 1)/2
-
+# функция создает мозаику с использованием исходного геофайла
 def create_mosaic(DTM_input):
     dtm = gdal.Open(DTM_input) 
     dtm_prj = dtm.GetProjection()
     band = dtm.GetRasterBand(1)  
     arr = band.ReadAsArray()
     hs_array = hillshade(arr,180, 90)
-    # hs_image = plt.imshow(hs_array,cmap='Greys')
-    # plt.show()
+
 
 
     x_mosaic_size = dtm.RasterXSize
@@ -67,27 +66,27 @@ create_mosaic(DTM_input)
 
 
 #создание shp файла
-# def create_shp(shp_output):
-driverName = "ESRI Shapefile"
-drv = ogr.GetDriverByName( driverName )
-ogrData = drv.CreateDataSource( "crat_circle.shp")
+def create_shp():
+    driverName = "ESRI Shapefile"
+    drv = ogr.GetDriverByName( driverName )
+    ogrData = drv.CreateDataSource( "crat_circle.shp")
 
-dtm = gdal.Open(DTM_input) 
-dtm_prj = dtm.GetProjection()
-srs = osr.SpatialReference(wkt=dtm_prj)
-layer = ogrData.CreateLayer( "crat_circle", srs, ogr.wkbPoint )
+    dtm = gdal.Open(DTM_input) 
+    dtm_prj = dtm.GetProjection()
+    srs = osr.SpatialReference(wkt=dtm_prj)
+    crat_layer = ogrData.CreateLayer( "crat_circle", srs, ogr.wkbPoint )
 
-#настраиваем поля
-fieldId = ogr.FieldDefn( "Id", ogr.OFTString )
-fieldId.SetWidth( 32 ) 
-layer.CreateField(fieldId)
-fieldDiam = ogr.FieldDefn( "Diam_m", ogr.OFTReal ) 
-fieldDiam.SetWidth( 18 )
-fieldDiam.SetPrecision( 1 ) 
-layer.CreateField(fieldDiam)
-layer.CreateField(ogr.FieldDefn("Latitude", ogr.OFTReal))
-layer.CreateField(ogr.FieldDefn("Longitude", ogr.OFTReal))
-# create_shp(shp_output)
+    #настраиваем поля
+    fieldId = ogr.FieldDefn( "Id", ogr.OFTString )
+    fieldId.SetWidth( 32 ) 
+    crat_layer.CreateField(fieldId)
+    fieldDiam = ogr.FieldDefn( "Diam_m", ogr.OFTReal ) 
+    fieldDiam.SetWidth( 18 )
+    fieldDiam.SetPrecision( 1 ) 
+    crat_layer.CreateField(fieldDiam)
+    crat_layer.CreateField(ogr.FieldDefn("Latitude", ogr.OFTReal))
+    crat_layer.CreateField(ogr.FieldDefn("Longitude", ogr.OFTReal))
+create_shp()
 
 # #создаем тестовый объект
 # pointCoord = [-124.4577, 48.0135]
@@ -177,7 +176,12 @@ cv2.imshow('gr',gradient1)
 # arr = band.ReadAsArray()
 # функция обнаружения кратеров и записи результатов в шейп-файл
 def crater_recognition(cv_start_radius = 100, cv_max_radius = 200, cv_param1 = 30, cv_param2 = 20, cv_min_distance = 100):
-# обнаружение кругов и отрисовка их на том же изображении
+
+    # открываем шейп-файл
+    driver = ogr.GetDriverByName('ESRI Shapefile')
+    dataSource = driver.Open("crat_circle.shp", 1)
+    crat_layer = dataSource.GetLayer()
+    # обнаружение кругов и отрисовка их на том же изображении
     radius = cv_start_radius
     while radius < cv_max_radius: 
         circles = cv2.HoughCircles(gradient1, cv2.HOUGH_GRADIENT, 1 , cv_min_distance, param1=cv_param1,param2=cv_param2,minRadius=(radius),maxRadius=(radius+10))
@@ -199,26 +203,25 @@ def crater_recognition(cv_start_radius = 100, cv_max_radius = 200, cv_param1 = 3
             # print(type(pointCoord[1]))
             point = ogr.Geometry(ogr.wkbPoint)
             point.AddPoint(pointCoord[0],pointCoord[1])
-            featureDefn = layer.GetLayerDefn()
+            featureDefn = crat_layer.GetLayerDefn()
             outFeature = ogr.Feature(featureDefn)
             outFeature.SetGeometry(point)
             outFeature.SetField(0, crat_id)
             outFeature.SetField(1, float(i[2])*2)
             outFeature.SetField('Latitude', float(i[0]))
             outFeature.SetField('Longitude', float(i[1]))
-            layer.CreateFeature(outFeature)
+            crat_layer.CreateFeature(outFeature)
             outFeature = None
             crat_id += 1
 
-# сохраняет получившееся изображение и открывает его 
 crater_recognition()
+# сохраняет получившееся изображение и открывает его 
 cv2.imwrite('detected_crat.tif', cimg)
 cv2.namedWindow('Image', cv2.WINDOW_NORMAL)
 cv2.resizeWindow('Image', 600, 600)
 cv2.imshow('Image',cimg)
 
 #закрывает все
-ogrData.Destroy()
 cv2.waitKey(0)
 cv2.destroyAllWindows()
 
