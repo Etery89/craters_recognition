@@ -19,7 +19,7 @@ from numpy import uint8
 
 
 
-# DTM_input = "GLD100_test.tif"
+DTM_input = "GLD100_test.tif"
     
     # созданиие массива мозаики
 def hillshade(array, azimuth, angle_altitude): 
@@ -213,7 +213,7 @@ def crater_recognition(cv_start_radius = 100, cv_max_radius = 200, cv_param1 = 3
             outFeature = None
             crat_id += 1
 
-# crater_recognition()
+crater_recognition()
 # сохраняет получившееся изображение и открывает его 
 cv2.imwrite('detected_crat.tif', cimg)
 cv2.namedWindow('Image', cv2.WINDOW_NORMAL)
