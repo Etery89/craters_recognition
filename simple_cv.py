@@ -54,7 +54,6 @@ def first_button():
         mosaic_dataset.SetProjection(dtm_prj)
         mosaic_dataset.GetRasterBand(1).WriteArray(hs_array)
         mosaic_dataset = None
-        return mosaic_file_name
 
     create_mosaic(dtm_input, create_mosaic_file_path(dtm_input))
 
@@ -70,7 +69,7 @@ def first_button():
         drv = ogr.GetDriverByName(driverName)
         ogrData = drv.CreateDataSource("crat_circle.shp")
 
-        dtm = gdal.Open(dtm_input) 
+        dtm = gdal.Open(dtm_input)
         dtm_prj = dtm.GetProjection()
         srs = osr.SpatialReference(wkt=dtm_prj)
         crat_layer = ogrData.CreateLayer("crat_circle", srs, ogr.wkbPoint)
@@ -108,40 +107,49 @@ def first_button():
     # print(raster)
     # print(raster[1][1])
 
+    def image_create(mosaic_file_path):
+        #открытие исходной мозаики
+        # mosaic = dtm_input.split('.')[0] + '_mosaic.tif'
+        image = cv2.imread(mosaic_file_path, 0)
+        #cv2.imshow("Image", image)
+        image = cv2.GaussianBlur(image, (3, 3), 0)
+        cimg = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+        return cimg
+    
+    # image_create(create_mosaic_file_path(dtm_input))
 
-    #открытие исходной мозаики
-    mosaic = dtm_input.split('.')[0] + '_mosaic.tif'
-    image = cv2.imread(mosaic, 0)
-    #cv2.imshow("Image", image)
+    def gradient_create(mosaic_file_path):
+        image = cv2.imread(mosaic_file_path, 0)
+        sobelx = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=5)  # x
+        sobely = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=5)  # y
+        gradient1 = cv2.subtract(sobelx, sobely)
+        gradient1 = cv2.convertScaleAbs(gradient1)
+        return gradient1
+    
+    # gradient_create(create_mosaic_file_path(dtm_input))
 
-    image = cv2.GaussianBlur(image, (3, 3), 0)
-    cimg = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+        # cv2.namedWindow('Blur', cv2.WINDOW_NORMAL)
+        # cv2.resizeWindow('Blur', 800, 800)
+        # cv2.imshow("Blur", image)
 
-    # cv2.namedWindow('Blur', cv2.WINDOW_NORMAL)
-    # cv2.resizeWindow('Blur', 800, 800)
-    # cv2.imshow("Blur", image)
+        # #открываем вторую ЦМР
+        # gdalData = gdal.Open( "APOLLO17_DTM_150CM_180_45.tif")
+        # xsize = gdalData.RasterXSize
+        # ysize = gdalData.RasterYSize
+        # raster = gdalData.ReadAsArray()
 
-    # #открываем вторую ЦМР
-    # gdalData = gdal.Open( "APOLLO17_DTM_150CM_180_45.tif")
-    # xsize = gdalData.RasterXSize
-    # ysize = gdalData.RasterYSize
-    # raster = gdalData.ReadAsArray()
+        # перебираем все пиксели растра
+        # print(xsize, ysize)
+        # print(raster)
+        # print(raster[1][1])
 
-    # перебираем все пиксели растра
-    # print(xsize, ysize)
-    # print(raster)
-    # print(raster[1][1])
-
-    #нормализация исходной мозаики
-    # normalizedImg = np.zeros((800, 800))
-    # normalizedImg = cv2.normalize(image,  normalizedImg, 150, 255, cv2.NORM_MINMAX)
-    # edges = cv2.Canny(normalizedImg,10,200)
+        #нормализация исходной мозаики
+        # normalizedImg = np.zeros((800, 800))
+        # normalizedImg = cv2.normalize(image,  normalizedImg, 150, 255, cv2.NORM_MINMAX)
+        # edges = cv2.Canny(normalizedImg,10,200)
 
 
-    sobelx = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=5)  # x
-    sobely = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=5)  # y
-    gradient1 = cv2.subtract(sobelx, sobely)
-    gradient1 = cv2.convertScaleAbs(gradient1)
+
 
     # laplacian = cv2.Laplacian(image,cv2.CV_64F)
     # gradient_blur = cv2.GaussianBlur(gradient, (3, 3), 0)
@@ -176,7 +184,7 @@ def first_button():
     # band = dtm.GetRasterBand(1)  
     # arr = band.ReadAsArray()
     # функция обнаружения кратеров и записи результатов в шейп-файл
-    def crater_recognition(gradient1, cv_start_radius = 100, cv_max_radius = 200, cv_param1 = 30, cv_param2 = 20, cv_min_distance = 100):
+    def crater_recognition(gradient1, cimg, cv_start_radius = 100, cv_max_radius = 200, cv_param1 = 30, cv_param2 = 20, cv_min_distance = 100):
         # circles = circle_detector.detect(gradient1)
         # dtm_input = "C:\\projects\\craters_recognition\\GLD100_test.tif"
         dtm = gdal.Open(dtm_input) 
@@ -205,7 +213,7 @@ def first_button():
             for i in circles[0, :]:
                 # num_i = list(map(float, i))
                 # нарисовать окружности
-                print(i)
+                # print(i)
                 cv2.circle(cimg, (i[0], i[1]), i[2], (0, 255, 0), 2)
                 cv2.circle(cimg, (i[0], i[1]), 2, (0, 0, 255), 3)
 
@@ -252,7 +260,7 @@ def first_button():
         #     cv2.imshow('2', cimg)
             
     print('end')
-    crater_recognition(gradient1)
+    crater_recognition(gradient_create(create_mosaic_file_path(dtm_input)), image_create(create_mosaic_file_path(dtm_input)))
     # сохраняет получившееся изображение и открывает его 
 
 
