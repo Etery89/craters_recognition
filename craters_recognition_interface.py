@@ -4,7 +4,8 @@ from PySide2 import QtWidgets, QtGui, QtCore
 from PySide2.QtCore import Slot
 
 from simple_cv import first_button
-# from simple_cv import create_mosaic
+from simple_cv import create_mosaic_file_path
+from simple_cv import create_mosaic
 
 
 class MyWidget(QtWidgets.QWidget):
@@ -130,8 +131,9 @@ class MyWidget(QtWidgets.QWidget):
         tiff_variable = self.get_DTM()
         shp_file_name = self.change_shp_file(tiff_variable)
         self.change_shp_file_qle.setText(shp_file_name)
-        # mosaic = create_mosaic(tiff_variable)
-        # self.mosaic_demonstration(mosaic)
+        mosaic_file_name = create_mosaic_file_path(tiff_variable)
+        mosaic = create_mosaic(tiff_variable, mosaic_file_name)
+        self.mosaic_demonstration(mosaic)
 
     # Функция открытия Шейп-файла нажатием кнопки
     @Slot()
@@ -143,7 +145,7 @@ class MyWidget(QtWidgets.QWidget):
     def change_shp_file(self, tiff_file_name):
         tiff_file_name = tiff_file_name.split('/')
         tiff_file_name.pop(len(tiff_file_name)-1)
-        tiff_file_name.append('detected_crat.shp')
+        tiff_file_name.append('crat_circle.shp')
         delimiter = '/'
         shp_file_name = delimiter.join(tiff_file_name)
         return shp_file_name
@@ -206,6 +208,7 @@ class MyWidget(QtWidgets.QWidget):
         )
         # Вызов функции генерации шейп-файла
         # Вызов функции демонстрации мозаики (передача туда файла мозаики с отрисованными кругами)
+
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication([])
