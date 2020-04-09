@@ -20,8 +20,12 @@ from numpy import uint8
 
 
 def first_button():
-    dtm_input = "C:\projects\craters_recognition\GLD100_test.tif"
-        
+    dtm_input = "C:\\projects\\craters_recognition\\GLD100_test.tif"
+    
+    def create_mosaic_file_path(dtm_input):
+        mosaic_file_name = dtm_input.split('.')[0] + '_mosaic.tif'
+        return mosaic_file_name
+
         # созданиие массива мозаики
     def hillshade(array, azimuth, angle_altitude):
         x, y = gradient(array)
@@ -35,7 +39,7 @@ def first_button():
         * cos(azimuthrad - aspect)
         return 255*(shaded + 1)/2
     # функция создает мозаику с использованием исходного геофайла
-    def create_mosaic(DTM_input):
+    def create_mosaic(DTM_input, mosaic_file_name):
         dtm = gdal.Open(DTM_input)
         dtm_prj = dtm.GetProjection()
         band = dtm.GetRasterBand(1)
@@ -44,16 +48,15 @@ def first_button():
 
         x_mosaic_size = dtm.RasterXSize
         y_mosaic_size = dtm.RasterYSize
-        mosaic_name = DTM_input.split('.')[0] + '_mosaic.tif'
         driver = gdal.GetDriverByName('GTiff')
-        mosaic_dataset = driver.Create(mosaic_name, x_mosaic_size, y_mosaic_size, 1, gdal.GDT_Byte)
+        mosaic_dataset = driver.Create(mosaic_file_name, x_mosaic_size, y_mosaic_size, 1, gdal.GDT_Byte)
 
         mosaic_dataset.SetProjection(dtm_prj)
         mosaic_dataset.GetRasterBand(1).WriteArray(hs_array)
         mosaic_dataset = None
-        return mosaic_name
+        return mosaic_file_name
 
-    create_mosaic(dtm_input)
+    create_mosaic(dtm_input, create_mosaic_file_path(dtm_input))
 
     # mosaic_image = cv2.imread(mosaic, 0)
     # cv2.namedWindow('dataset', cv2.WINDOW_NORMAL)
@@ -155,9 +158,9 @@ def first_button():
     # cv2.resizeWindow('y', 800, 800)
     # cv2.imshow('y',sobely)
 
-    cv2.namedWindow('gr', cv2.WINDOW_NORMAL)
-    cv2.resizeWindow('gr', 800, 800)
-    cv2.imshow('gr',gradient1)
+    # cv2.namedWindow('gr', cv2.WINDOW_NORMAL)
+    # cv2.resizeWindow('gr', 800, 800)
+    # cv2.imshow('gr',gradient1)
 
     # cv2.namedWindow('Norm', cv2.WINDOW_NORMAL)
     # cv2.resizeWindow('Norm', 800, 800)
@@ -174,22 +177,27 @@ def first_button():
     # arr = band.ReadAsArray()
     # функция обнаружения кратеров и записи результатов в шейп-файл
     def crater_recognition(gradient1, cv_start_radius = 100, cv_max_radius = 200, cv_param1 = 30, cv_param2 = 20, cv_min_distance = 100):
-
-        # dtm = gdal.Open(DTM_input) 
-        # dtm_prj = dtm.GetProjection()
-        # band = dtm.GetRasterBand(1)  
-        # dtm_arr = band.ReadAsArray()
-        # # x_mosaic_size = dtm.RasterXSize
-        # # y_mosaic_size = dtm.RasterYSize
-        # print(dtm_arr)
+        # circles = circle_detector.detect(gradient1)
+        # dtm_input = "C:\\projects\\craters_recognition\\GLD100_test.tif"
+        dtm = gdal.Open(dtm_input) 
+        dtm_prj = dtm.GetProjection()
+        band = dtm.GetRasterBand(1)  
+        dtm_arr = band.ReadAsArray()
+        x_mosaic_size = dtm.RasterXSize
+        y_mosaic_size = dtm.RasterYSize
+        geo_info = dtm.GetGeoTransform()
+        # print(geo_info)
         # открываем шейп-файл
         driver = ogr.GetDriverByName('ESRI Shapefile')
         dataSource = driver.Open("crat_circle.shp", 1)
         crat_layer = dataSource.GetLayer()
+
+        gradient2 = gradient1
         # обнаружение кругов и отрисовка их на том же изображении
+        crat_id = 0
         radius = cv_start_radius
         while radius < cv_max_radius:
-            circles = cv2.HoughCircles(gradient1, cv2.HOUGH_GRADIENT, 1, cv_min_distance, param1=cv_param1, param2=cv_param2, minRadius=(radius), maxRadius=(radius+10))
+            circles = cv2.HoughCircles(gradient1, cv2.HOUGH_GRADIENT, 1, cv_min_distance, param1=cv_param1, param2=cv_param2, minRadius=(radius), maxRadius=(radius+11))
             radius += 10
             if circles is None:
                 continue
@@ -197,13 +205,14 @@ def first_button():
             for i in circles[0, :]:
                 # num_i = list(map(float, i))
                 # нарисовать окружности
-                # print(i)
+                print(i)
                 cv2.circle(cimg, (i[0], i[1]), i[2], (0, 255, 0), 2)
                 cv2.circle(cimg, (i[0], i[1]), 2, (0, 0, 255), 3)
 
                 #заносим атрибутивную информацию в слой
-                crat_id = 0
-                pointCoord = [float(i[0]), float(i[1])]
+                x_coord = geo_info[0] + float(i[0]) * geo_info[1]
+                y_coord = geo_info[3] - float(i[1]) * geo_info[1]
+                pointCoord = [x_coord, y_coord]
                 # print(pointCoord)
                 # print(type(pointCoord[1]))
                 point = ogr.Geometry(ogr.wkbPoint)
@@ -213,20 +222,44 @@ def first_button():
                 outFeature.SetGeometry(point)
                 outFeature.SetField(0, crat_id)
                 outFeature.SetField(1, float(i[2])*2)
-                outFeature.SetField('Latitude', float(i[0]))
-                outFeature.SetField('Longitude', float(i[1]))
+                outFeature.SetField('Latitude', x_coord)
+                outFeature.SetField('Longitude', y_coord)
                 crat_layer.CreateFeature(outFeature)
                 outFeature = None
                 crat_id += 1
+        print(crat_id)
+        cv2.imwrite('detected_crat.tif', cimg)
+        cv2.namedWindow('Image', cv2.WINDOW_NORMAL)
+        cv2.resizeWindow('Image', 600, 600)
+        cv2.imshow('Image', cimg)
+        # повторная обработка
+        # radius = cv_start_radius
+        # while radius < cv_max_radius:
+        #     circles = cv2.HoughCircles(gradient1, cv2.HOUGH_GRADIENT, 1, cv_min_distance, param1=cv_param1, param2=cv_param2, minRadius=(radius), maxRadius=(radius+10))
+        #     radius += 10
+        #     if circles is None:
+        #         continue
+        #     circles = np.uint16(np.around(circles))
+        #     for i in circles[0, :]:
+        #         # num_i = list(map(float, i))
+        #         # нарисовать окружности
+        #         print('yes')
+        #         cv2.circle(cimg, (i[0], i[1]), i[2], (255, 255, 0), 2)
+        #         cv2.circle(cimg, (i[0], i[1]), 2, (0, 255, 255), 3) 
+        #     cv2.imwrite('detected_crat.tif', cimg)
+        #     cv2.namedWindow('2', cv2.WINDOW_NORMAL)
+        #     cv2.resizeWindow('2', 600, 600)
+        #     cv2.imshow('2', cimg)
+            
     print('end')
     crater_recognition(gradient1)
     # сохраняет получившееся изображение и открывает его 
-    cv2.imwrite('detected_crat.tif', cimg)
-    cv2.namedWindow('Image', cv2.WINDOW_NORMAL)
-    cv2.resizeWindow('Image', 600, 600)
-    cv2.imshow('Image',cimg)
 
-first_button()
+
+
+
+if __name__ == "__main__":
+    first_button()
 #закрывает все
 cv2.waitKey(0)
 cv2.destroyAllWindows()
