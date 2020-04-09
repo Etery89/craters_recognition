@@ -57,12 +57,6 @@ def first_button():
 
     create_mosaic(dtm_input, create_mosaic_file_path(dtm_input))
 
-    # mosaic_image = cv2.imread(mosaic, 0)
-    # cv2.namedWindow('dataset', cv2.WINDOW_NORMAL)
-    # cv2.resizeWindow('dataset', 800, 800)
-    # cv2.imshow('dataset',mosaic_image)
-
-
     #создание shp файла
     def create_shp():
         driverName = "ESRI Shapefile"
@@ -87,26 +81,6 @@ def first_button():
     create_shp()
 
 
-    # #создаем тестовый объект
-    # pointCoord = [-124.4577, 48.0135]
-    # point = ogr.Geometry(ogr.wkbPoint)
-    # point.AddPoint(pointCoord[0],pointCoord[1])
-    # print(type(pointCoord[1]))
-    # featureDefn = layer.GetLayerDefn()
-    # outFeature = ogr.Feature(featureDefn)
-    # outFeature.SetGeometry(point)
-    # outFeature.SetField(0, 1)
-    # outFeature.SetField(1, 1)
-    # layer.CreateFeature(outFeature)
-    # outFeature = None
-
-
-
-    # перебираем все пиксели растра
-    # print(xsize, ysize)
-    # print(raster)
-    # print(raster[1][1])
-
     def image_create(mosaic_file_path):
         #открытие исходной мозаики
         # mosaic = dtm_input.split('.')[0] + '_mosaic.tif'
@@ -115,8 +89,7 @@ def first_button():
         image = cv2.GaussianBlur(image, (3, 3), 0)
         cimg = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
         return cimg
-    
-    # image_create(create_mosaic_file_path(dtm_input))
+
 
     def gradient_create(mosaic_file_path):
         image = cv2.imread(mosaic_file_path, 0)
@@ -125,68 +98,10 @@ def first_button():
         gradient1 = cv2.subtract(sobelx, sobely)
         gradient1 = cv2.convertScaleAbs(gradient1)
         return gradient1
-    
-    # gradient_create(create_mosaic_file_path(dtm_input))
 
-        # cv2.namedWindow('Blur', cv2.WINDOW_NORMAL)
-        # cv2.resizeWindow('Blur', 800, 800)
-        # cv2.imshow("Blur", image)
-
-        # #открываем вторую ЦМР
-        # gdalData = gdal.Open( "APOLLO17_DTM_150CM_180_45.tif")
-        # xsize = gdalData.RasterXSize
-        # ysize = gdalData.RasterYSize
-        # raster = gdalData.ReadAsArray()
-
-        # перебираем все пиксели растра
-        # print(xsize, ysize)
-        # print(raster)
-        # print(raster[1][1])
-
-        #нормализация исходной мозаики
-        # normalizedImg = np.zeros((800, 800))
-        # normalizedImg = cv2.normalize(image,  normalizedImg, 150, 255, cv2.NORM_MINMAX)
-        # edges = cv2.Canny(normalizedImg,10,200)
-
-
-
-
-    # laplacian = cv2.Laplacian(image,cv2.CV_64F)
-    # gradient_blur = cv2.GaussianBlur(gradient, (3, 3), 0)
-
-    # cv2.namedWindow('Lap', cv2.WINDOW_NORMAL)
-    # cv2.resizeWindow('Lap', 800, 800)
-    # cv2.imshow('Lap',laplacian)
-
-    # cv2.namedWindow('x', cv2.WINDOW_NORMAL)
-    # cv2.resizeWindow('x', 800, 800)
-    # cv2.imshow('x',sobelx)
-
-    # cv2.namedWindow('y', cv2.WINDOW_NORMAL)
-    # cv2.resizeWindow('y', 800, 800)
-    # cv2.imshow('y',sobely)
-
-    # cv2.namedWindow('gr', cv2.WINDOW_NORMAL)
-    # cv2.resizeWindow('gr', 800, 800)
-    # cv2.imshow('gr',gradient1)
-
-    # cv2.namedWindow('Norm', cv2.WINDOW_NORMAL)
-    # cv2.resizeWindow('Norm', 800, 800)
-    # cv2.imshow('Norm',normalizedImg)
-
-    # cv2.namedWindow('Edge', cv2.WINDOW_NORMAL)
-    # cv2.resizeWindow('Edge', 800, 800)
-    # cv2.imshow('Edge',edges)
-
-
-    # dtm = gdal.Open(DTM_input) 
-    # dtm_prj = dtm.GetProjection()
-    # band = dtm.GetRasterBand(1)  
-    # arr = band.ReadAsArray()
     # функция обнаружения кратеров и записи результатов в шейп-файл
     def crater_recognition(gradient1, cimg, cv_start_radius = 100, cv_max_radius = 200, cv_param1 = 30, cv_param2 = 20, cv_min_distance = 100):
         # circles = circle_detector.detect(gradient1)
-        # dtm_input = "C:\\projects\\craters_recognition\\GLD100_test.tif"
         dtm = gdal.Open(dtm_input) 
         dtm_prj = dtm.GetProjection()
         band = dtm.GetRasterBand(1)  
@@ -194,7 +109,6 @@ def first_button():
         x_mosaic_size = dtm.RasterXSize
         y_mosaic_size = dtm.RasterYSize
         geo_info = dtm.GetGeoTransform()
-        # print(geo_info)
         # открываем шейп-файл
         driver = ogr.GetDriverByName('ESRI Shapefile')
         dataSource = driver.Open("crat_circle.shp", 1)
@@ -262,8 +176,6 @@ def first_button():
     print('end')
     crater_recognition(gradient_create(create_mosaic_file_path(dtm_input)), image_create(create_mosaic_file_path(dtm_input)))
     # сохраняет получившееся изображение и открывает его 
-
-
 
 
 if __name__ == "__main__":
