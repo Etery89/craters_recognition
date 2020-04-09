@@ -3,7 +3,7 @@ import os
 from PySide2 import QtWidgets, QtGui, QtCore
 from PySide2.QtCore import Slot
 
-# from simple_cv import crater_recognition
+from simple_cv import first_button
 # from simple_cv import create_mosaic
 
 
@@ -20,16 +20,17 @@ class MyWidget(QtWidgets.QWidget):
         self.layout_open = QtWidgets.QHBoxLayout()
         self.layout_open.addWidget(self.file_open_lineedit)
         self.layout_open.addWidget(self.file_open_button)
-        # QHBoxLayout "save file"
-        self.file_save_button = QtWidgets.QPushButton('Save Shp-file')
-        self.file_save_lineedit = QtWidgets.QLineEdit()
 
-        self.layout_save = QtWidgets.QHBoxLayout()
-        self.layout_save.addWidget(self.file_save_lineedit)
-        self.layout_save.addWidget(self.file_save_button)
+        # QHBoxLayout "Change Shp-file"
+        self.change_shp_file_ql = QtWidgets.QLabel('Change Shp-file')
+        self.change_shp_file_qle = QtWidgets.QLineEdit()
+
+        self.layout_change_shp_file = QtWidgets.QHBoxLayout()
+        self.layout_change_shp_file.addWidget(self.change_shp_file_ql)
+        self.layout_change_shp_file.addWidget(self.change_shp_file_qle)
 
         # Algorithm button
-        self.algorithm_button = QtWidgets.QPushButton('Сirclesы calculation')
+        self.algorithm_button = QtWidgets.QPushButton('Сircles calculation')
 
         # QHBoxLayout "Open Shp file"
         self.shp_file_open_button = QtWidgets.QPushButton('Open Shp-file')
@@ -78,7 +79,7 @@ class MyWidget(QtWidgets.QWidget):
         # QVBoxLayout "left parth"/"function parth"
         self.layout_function_parth = QtWidgets.QVBoxLayout()
         self.layout_function_parth.addLayout(self.layout_open)
-        self.layout_function_parth.addLayout(self.layout_save)
+        self.layout_function_parth.addLayout(self.layout_change_shp_file)
         self.layout_function_parth.addLayout(self.parameters_layout)
         self.layout_function_parth.addWidget(self.algorithm_button)
         self.layout_function_parth.addLayout(self.layout_open_shp_file)
@@ -105,7 +106,6 @@ class MyWidget(QtWidgets.QWidget):
         # Signal buttons
         self.file_open_button.clicked.connect(self.open_tiff_file)
         self.shp_file_open_button.clicked.connect(self.open_shp_file)
-        self.file_save_button.clicked.connect(self.save_shp_file)
         self.algorithm_button.clicked.connect(self.take_parameters_and_use_initial_data)
 
     # функция получения имени открытого DTM(TIFF)-файла
@@ -116,7 +116,7 @@ class MyWidget(QtWidgets.QWidget):
     # Функция демонстрации мозаики
     def mosaic_demonstration(self, mosaic_image):
         mosaic_image_pixmap = QtGui.QPixmap(mosaic_image)
-        mosaic_to_image_lable = self.image_label.setPixmap(
+        mosaic_to_image_label = self.image_label.setPixmap(
             mosaic_image_pixmap.scaled(600, 800, QtCore.Qt.KeepAspectRatio)
             )
 
@@ -124,36 +124,43 @@ class MyWidget(QtWidgets.QWidget):
     @Slot()
     def open_tiff_file(self):
         path_to_file, _ = QtWidgets.QFileDialog.getOpenFileName(
-            self, 'Load Image', os.path.dirname(os.path.abspath(__file__)), 'Images (*.jpg *.png *.bmp *.TIF *.TIFF)'
+            self, 'Load Image', os.path.dirname(os.path.abspath(__file__)), 'Images (*.img *.TIF *.TIFF)'
          )
         path_to_file_text = self.file_open_lineedit.setText(path_to_file)
-        # mosaic = create_mosaic(path_to_file_text)
+        tiff_variable = self.get_DTM()
+        shp_file_name = self.change_shp_file(tiff_variable)
+        self.change_shp_file_qle.setText(shp_file_name)
+        # mosaic = create_mosaic(tiff_variable)
         # self.mosaic_demonstration(mosaic)
 
     # Функция открытия Шейп-файла нажатием кнопки
     @Slot()
     def open_shp_file(self):
-        path_to_the_shp_file, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Load Sph-file', os.path.dirname(os.path.abspath(__file__)), 'Files (*.Shp)')
+        path_to_the_shp_file, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Load Shp file', os.path.dirname(os.path.abspath(__file__)), 'Files (*.Shp)')
         path_to_the_shp_file_text = self.shp_file_open_lineedit.setText(path_to_the_shp_file)
 
-    # Функция сохранения шейп-файла нажатием кнопки
-    @Slot()
-    def save_shp_file(self):
-        file_name = QtWidgets.QFileDialog.getSaveFileName(
-            self, 'Save Shp-file', os.path.dirname(os.path.abspath(__file__)), 'Files (*.Shp)'
-            )
-        file_name_text = self.file_save_lineedit.setText(file_name)
+    # Функция выбора имени шейп-файла
+    def change_shp_file(self, tiff_file_name):
+        tiff_file_name = tiff_file_name.split('/')
+        tiff_file_name.pop(len(tiff_file_name)-1)
+        tiff_file_name.append('detected_crat.shp')
+        delimiter = '/'
+        shp_file_name = delimiter.join(tiff_file_name)
+        return shp_file_name
 
     # Функция проверки значений параметров на соответствие типу данных
     def parameters_except(self, parameter_field_name, error_msg, errors_list):
         try:
             parameter_field_name_value = getattr(self, parameter_field_name)
-            parameter_value = abs(int(parameter_field_name_value.text()))
+            parameter_value = int(parameter_field_name_value.text())
             return parameter_value
         except ValueError:
             parameter_field_name_value.clear()
             errors_list.append(error_msg)
             return None
+
+    def parameters_except_non_negativity(self, parameter_field_name, errors_list, error_msg):
+        pass
 
     @Slot()
     def take_parameters_and_use_initial_data(self):
@@ -190,15 +197,15 @@ class MyWidget(QtWidgets.QWidget):
         else:
             delimiter = '\n'
             self.program_message_field.setText(delimiter.join(messages_for_errors))
-
-        # crater_recognition(
-        #     cv_start_radius=min_search_radius_value,
-        #     cv_max_radius=max_search_radius_value,
-        #     cv_param1=parametr1_value,
-        #     cv_param2=parametr2_value,
-        #     cv_min_distance=min_distance_centers_value
-        #     )
-
+        first_button(
+            cv_start_radius=min_search_radius_value,
+            cv_max_radius=max_search_radius_value,
+            cv_param1=parametr1_value,
+            cv_param2=parametr2_value,
+            cv_min_distance=min_distance_centers_value
+        )
+        # Вызов функции генерации шейп-файла
+        # Вызов функции демонстрации мозаики (передача туда файла мозаики с отрисованными кругами)
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication([])

@@ -4,8 +4,6 @@ __pycache__/
 *$py.class
 
 crat/
-*.tif
-*.tiff
 .vscode/
 
 # C extensions
@@ -136,5 +134,12 @@ dmypy.json
 
 # Other files
 .ipynb/
-.jpg/
+.jpg
 .whl
+.tiff
+.tif
+.shp
+.tfw
+.tif.aux.xml
+.tif.vat.dbf
+.test_images/
