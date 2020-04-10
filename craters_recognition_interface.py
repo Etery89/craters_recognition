@@ -44,33 +44,33 @@ class MyWidget(QtWidgets.QWidget):
         # Button for calculating additional parameters
         self.additional_parameters_button = QtWidgets.QPushButton('Сalculation of additional parameters')
 
-        # QGridLayout "Parameters"
-        self.var_with_image_qlable = QtWidgets.QLabel('Image variable')
-        self.var_with_image_qlineedit = QtWidgets.QLineEdit()
+        # QHBoxLayout
         self.min_distance_centers_ql = QtWidgets.QLabel('Minimum distance between centers')
-        self.min_distance_centers_qle = QtWidgets.QLineEdit()
+        self.min_distance_centers_qle = QtWidgets.QLineEdit('100')
+
+        self.layout_for_min_distance = QtWidgets.QHBoxLayout()
+        self.layout_for_min_distance.addWidget(self.min_distance_centers_ql)
+        self.layout_for_min_distance.addWidget(self.min_distance_centers_qle)
+
+        # QGridLayout "Parameters"
         self.parametr1_qlable = QtWidgets.QLabel('Parameter 1')
-        self.parametr1_qlineedit = QtWidgets.QLineEdit()
+        self.parametr1_qlineedit = QtWidgets.QLineEdit('30')
         self.parametr2_qlable = QtWidgets.QLabel('Parameter 2')
-        self.parametr2_qlineedit = QtWidgets.QLineEdit()
+        self.parametr2_qlineedit = QtWidgets.QLineEdit('20')
         self.min_search_radius_qlable = QtWidgets.QLabel('Minimum Search Radius')
-        self.min_search_radius_qlineedit = QtWidgets.QLineEdit()
+        self.min_search_radius_qlineedit = QtWidgets.QLineEdit('100')
         self.max_search_radius_qlable = QtWidgets.QLabel('Maximum Search Radius')
-        self.max_search_radius_qlineedit = QtWidgets.QLineEdit()
+        self.max_search_radius_qlineedit = QtWidgets.QLineEdit('200')
 
         self.parameters_layout = QtWidgets.QGridLayout()
-        self.parameters_layout.addWidget(self.var_with_image_qlable, 0, 0)
-        self.parameters_layout.addWidget(self.var_with_image_qlineedit, 0, 1)
-        self.parameters_layout.addWidget(self.min_distance_centers_ql, 0, 2)
-        self.parameters_layout.addWidget(self.min_distance_centers_qle, 0, 3)
-        self.parameters_layout.addWidget(self.parametr1_qlable, 1, 0)
-        self.parameters_layout.addWidget(self.parametr1_qlineedit, 1, 1)
-        self.parameters_layout.addWidget(self.parametr2_qlable, 2, 0)
-        self.parameters_layout.addWidget(self.parametr2_qlineedit, 2, 1)
-        self.parameters_layout.addWidget(self.min_search_radius_qlable, 1, 2)
-        self.parameters_layout.addWidget(self.min_search_radius_qlineedit, 1, 3)
-        self.parameters_layout.addWidget(self.max_search_radius_qlable, 2, 2)
-        self.parameters_layout.addWidget(self.max_search_radius_qlineedit, 2, 3)
+        self.parameters_layout.addWidget(self.parametr1_qlable, 0, 0)
+        self.parameters_layout.addWidget(self.parametr1_qlineedit, 0, 1)
+        self.parameters_layout.addWidget(self.parametr2_qlable, 1, 0)
+        self.parameters_layout.addWidget(self.parametr2_qlineedit, 1, 1)
+        self.parameters_layout.addWidget(self.min_search_radius_qlable, 0, 2)
+        self.parameters_layout.addWidget(self.min_search_radius_qlineedit, 0, 3)
+        self.parameters_layout.addWidget(self.max_search_radius_qlable, 1, 2)
+        self.parameters_layout.addWidget(self.max_search_radius_qlineedit, 1, 3)
 
         # Program message output field
         # self.program_message_label = QtWidgets.QLabel('Program messages')
@@ -81,6 +81,7 @@ class MyWidget(QtWidgets.QWidget):
         self.layout_function_parth = QtWidgets.QVBoxLayout()
         self.layout_function_parth.addLayout(self.layout_open)
         self.layout_function_parth.addLayout(self.layout_change_shp_file)
+        self.layout_function_parth.addLayout(self.layout_for_min_distance)
         self.layout_function_parth.addLayout(self.parameters_layout)
         self.layout_function_parth.addWidget(self.algorithm_button)
         self.layout_function_parth.addLayout(self.layout_open_shp_file)
@@ -107,7 +108,7 @@ class MyWidget(QtWidgets.QWidget):
         # Signal buttons
         self.file_open_button.clicked.connect(self.open_tiff_file)
         self.shp_file_open_button.clicked.connect(self.open_shp_file)
-        self.algorithm_button.clicked.connect(self.take_parameters_and_use_initial_data)
+        self.algorithm_button.clicked.connect(self.take_parameters_and_use_first_button)
 
     # функция получения имени открытого DTM(TIFF)-файла
     def get_DTM(self):
@@ -161,37 +162,35 @@ class MyWidget(QtWidgets.QWidget):
             errors_list.append(error_msg)
             return None
 
-    def parameters_except_non_negativity(self, parameter_field_name, errors_list, error_msg):
-        pass
 
     @Slot()
-    def take_parameters_and_use_initial_data(self):
+    def take_parameters_and_use_first_button(self):
         messages_for_errors = []
 
-        error_message_1 = 'Неправильный тип данных в поле "Image variable". Введите целое число'
-        error_message_2 = 'Неправильный тип данных в поле "Minimum distance between centers". Введите целое число'
-        error_message_3 = 'Неправильный тип данных в поле "Parameter 1". Введите целое число'
-        error_message_4 = 'Неправильный тип данных в поле "Parameter 2". Введите целое число'
-        error_message_5 = 'Неправильный тип данных в поле "Minimum Search Radius". Введите целое число'
-        error_message_6 = 'Неправильный тип данных в поле "Maximum Search Radius". Введите целое число'
+        # error_message_1 = 'Неправильный тип данных в поле "Image variable". Введите целое число'
+        error_message_1 = 'Неправильный тип данных в поле "Minimum distance between centers". Введите целое число'
+        error_message_2 = 'Неправильный тип данных в поле "Parameter 1". Введите целое число'
+        error_message_3 = 'Неправильный тип данных в поле "Parameter 2". Введите целое число'
+        error_message_4 = 'Неправильный тип данных в поле "Minimum Search Radius". Введите целое число'
+        error_message_5 = 'Неправильный тип данных в поле "Maximum Search Radius". Введите целое число'
 
-        var_with_image_value = self.parameters_except(
-            'var_with_image_qlineedit', error_message_1, messages_for_errors
-            )
+        # var_with_image_value = self.parameters_except(
+        #     'var_with_image_qlineedit', error_message_1, messages_for_errors
+        #     )
         min_distance_centers_value = self.parameters_except(
-            'min_distance_centers_qle', error_message_2, messages_for_errors
+            'min_distance_centers_qle', error_message_1, messages_for_errors
             )
         parametr1_value = self.parameters_except(
-            'parametr1_qlineedit', error_message_3, messages_for_errors
+            'parametr1_qlineedit', error_message_2, messages_for_errors
             )
         parametr2_value = self.parameters_except(
-            'parametr2_qlineedit', error_message_4, messages_for_errors
+            'parametr2_qlineedit', error_message_3, messages_for_errors
             )
         min_search_radius_value = self.parameters_except(
-            'min_search_radius_qlineedit', error_message_5, messages_for_errors
+            'min_search_radius_qlineedit', error_message_4, messages_for_errors
             )
         max_search_radius_value = self.parameters_except(
-            'max_search_radius_qlineedit', error_message_6, messages_for_errors
+            'max_search_radius_qlineedit', error_message_5, messages_for_errors
             )
 
         if len(messages_for_errors) == 0:
@@ -199,15 +198,17 @@ class MyWidget(QtWidgets.QWidget):
         else:
             delimiter = '\n'
             self.program_message_field.setText(delimiter.join(messages_for_errors))
-        first_button(
-            cv_start_radius=min_search_radius_value,
-            cv_max_radius=max_search_radius_value,
-            cv_param1=parametr1_value,
-            cv_param2=parametr2_value,
-            cv_min_distance=min_distance_centers_value
-        )
-        # Вызов функции генерации шейп-файла
-        # Вызов функции демонстрации мозаики (передача туда файла мозаики с отрисованными кругами)
+
+        shp_file_name = self.change_shp_file_qle.text()
+
+        # first_button(
+        #     shape_file_name
+        #     cv_start_radius=min_search_radius_value,
+        #     cv_max_radius=max_search_radius_value,
+        #     cv_param1=parametr1_value,
+        #     cv_param2=parametr2_value,
+        #     cv_min_distance=min_distance_centers_value
+        # )
 
 
 if __name__ == "__main__":
