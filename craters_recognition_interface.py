@@ -3,9 +3,12 @@ import os
 from PySide2 import QtWidgets, QtGui, QtCore
 from PySide2.QtCore import Slot
 
-from simple_cv import first_button
 from simple_cv import create_mosaic_file_path
 from simple_cv import create_mosaic
+from simple_cv import create_shp
+from simple_cv import image_create
+from simple_cv import gradient_create
+from simple_cv import crater_recognition
 
 
 class MyWidget(QtWidgets.QWidget):
@@ -133,8 +136,9 @@ class MyWidget(QtWidgets.QWidget):
         shp_file_name = self.change_shp_file(tiff_variable)
         self.change_shp_file_qle.setText(shp_file_name)
         mosaic_file_name = create_mosaic_file_path(tiff_variable)
-        mosaic = create_mosaic(tiff_variable, mosaic_file_name)
-        self.mosaic_demonstration(mosaic)
+        create_mosaic(tiff_variable, mosaic_file_name)
+        self.mosaic_demonstration(mosaic_file_name)
+        return mosaic_file_name
 
     # Функция открытия Шейп-файла нажатием кнопки
     @Slot()
@@ -164,19 +168,15 @@ class MyWidget(QtWidgets.QWidget):
 
 
     @Slot()
-    def take_parameters_and_use_first_button(self):
+    def take_parameters_and_use_first_button(self, mosaic):
         messages_for_errors = []
 
-        # error_message_1 = 'Неправильный тип данных в поле "Image variable". Введите целое число'
         error_message_1 = 'Неправильный тип данных в поле "Minimum distance between centers". Введите целое число'
         error_message_2 = 'Неправильный тип данных в поле "Parameter 1". Введите целое число'
         error_message_3 = 'Неправильный тип данных в поле "Parameter 2". Введите целое число'
         error_message_4 = 'Неправильный тип данных в поле "Minimum Search Radius". Введите целое число'
         error_message_5 = 'Неправильный тип данных в поле "Maximum Search Radius". Введите целое число'
 
-        # var_with_image_value = self.parameters_except(
-        #     'var_with_image_qlineedit', error_message_1, messages_for_errors
-        #     )
         min_distance_centers_value = self.parameters_except(
             'min_distance_centers_qle', error_message_1, messages_for_errors
             )
@@ -199,16 +199,24 @@ class MyWidget(QtWidgets.QWidget):
             delimiter = '\n'
             self.program_message_field.setText(delimiter.join(messages_for_errors))
 
-        shp_file_name = self.change_shp_file_qle.text()
+        # mosaic_name = self.open_tiff_file()
+        # print(mosaic_name)
+        cimg = image_create(mosaic)
+        gradient = gradient_create(mosaic)
 
-        # first_button(
-        #     shape_file_name
-        #     cv_start_radius=min_search_radius_value,
-        #     cv_max_radius=max_search_radius_value,
-        #     cv_param1=parametr1_value,
-        #     cv_param2=parametr2_value,
-        #     cv_min_distance=min_distance_centers_value
-        # )
+        shp_file_name = self.change_shp_file_qle.text()
+        shp_name = create_shp(shp_file_name)
+
+        crater_recognition(
+            gradient1=gradient,
+            cimg=cimg,
+            shp_name=shp_name,
+            cv_start_radius=min_search_radius_value,
+            cv_max_radius=max_search_radius_value,
+            cv_param1=parametr1_value,
+            cv_param2=parametr2_value,
+            cv_min_distance=min_distance_centers_value
+        )
 
 
 if __name__ == "__main__":

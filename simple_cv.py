@@ -17,12 +17,15 @@ from numpy import zeros
 from numpy import uint8
 
 
+
+
+
+    
 def create_mosaic_file_path(dtm_input):
     mosaic_file_name = dtm_input.split('.')[0] + '_mosaic.tif'
     return mosaic_file_name
 
-
-# созданиие массива мозаики
+    # созданиие массива мозаики
 def hillshade(array, azimuth, angle_altitude):
     x, y = gradient(array)
     slope = pi/2. - arctan(sqrt(x*x + y*y))
@@ -34,8 +37,6 @@ def hillshade(array, azimuth, angle_altitude):
     + cos(altituderad) * cos(slope)\
     * cos(azimuthrad - aspect)
     return 255*(shaded + 1)/2
-
-
 # функция создает мозаику с использованием исходного геофайла
 def create_mosaic(DTM_input, mosaic_file_name):
     dtm = gdal.Open(DTM_input)
@@ -52,139 +53,145 @@ def create_mosaic(DTM_input, mosaic_file_name):
     mosaic_dataset.SetProjection(dtm_prj)
     mosaic_dataset.GetRasterBand(1).WriteArray(hs_array)
     mosaic_dataset = None
-    return mosaic_file_name
+
+# create_mosaic(dtm_input, create_mosaic_file_path(dtm_input))
 
 
-def first_button(mosaic):
- #создание shp файла
-    def create_shp():
-        driverName = "ESRI Shapefile"
-        drv = ogr.GetDriverByName(driverName)
-        ogrData = drv.CreateDataSource("crat_circle.shp")
+   
 
-        dtm = gdal.Open(dtm_input)
-        dtm_prj = dtm.GetProjection()
-        srs = osr.SpatialReference(wkt=dtm_prj)
-        crat_layer = ogrData.CreateLayer("crat_circle", srs, ogr.wkbPoint)
+    #создание shp файла
+def create_shp(shp_name):
+    driverName = "ESRI Shapefile"
+    drv = ogr.GetDriverByName(driverName)
+    ogrData = drv.CreateDataSource(shp_name)
 
-        #настраиваем поля
-        fieldId = ogr.FieldDefn("Id", ogr.OFTString)
-        fieldId.SetWidth(32)
-        crat_layer.CreateField(fieldId)
-        fieldDiam = ogr.FieldDefn("Diam_m", ogr.OFTReal)
-        fieldDiam.SetWidth(18)
-        fieldDiam.SetPrecision(1)
-        crat_layer.CreateField(fieldDiam)
-        crat_layer.CreateField(ogr.FieldDefn("Latitude", ogr.OFTReal))
-        crat_layer.CreateField(ogr.FieldDefn("Longitude", ogr.OFTReal))
-    create_shp()
+    dtm = gdal.Open(dtm_input)
+    dtm_prj = dtm.GetProjection()
+    srs = osr.SpatialReference(wkt=dtm_prj)
+    crat_layer = ogrData.CreateLayer(shp_name, srs, ogr.wkbPoint)
+
+    #настраиваем поля
+    fieldId = ogr.FieldDefn("Id", ogr.OFTString)
+    fieldId.SetWidth(32)
+    crat_layer.CreateField(fieldId)
+    fieldDiam = ogr.FieldDefn("Diam_m", ogr.OFTReal)
+    fieldDiam.SetWidth(18)
+    fieldDiam.SetPrecision(1)
+    crat_layer.CreateField(fieldDiam)
+    crat_layer.CreateField(ogr.FieldDefn("Latitude", ogr.OFTReal))
+    crat_layer.CreateField(ogr.FieldDefn("Longitude", ogr.OFTReal))
+    return shp_name
+# create_shp()
+
+# def first_button(mosaic):
+
+def image_create(mosaic_file_path):
+    #открытие исходной мозаики
+    # mosaic = dtm_input.split('.')[0] + '_mosaic.tif'
+    image = cv2.imread(mosaic_file_path, 0)
+    #cv2.imshow("Image", image)
+    image = cv2.GaussianBlur(image, (3, 3), 0)
+    cimg = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+    return cimg
 
 
-    def image_create(mosaic_file_path):
-        #открытие исходной мозаики
-        # mosaic = dtm_input.split('.')[0] + '_mosaic.tif'
-        image = cv2.imread(mosaic_file_path, 0)
-        #cv2.imshow("Image", image)
-        image = cv2.GaussianBlur(image, (3, 3), 0)
-        cimg = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
-        return cimg
+def gradient_create(mosaic_file_path):
+    image = cv2.imread(mosaic_file_path, 0)
+    sobelx = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=5)  # x
+    sobely = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=5)  # y
+    gradient1 = cv2.subtract(sobelx, sobely)
+    gradient1 = cv2.convertScaleAbs(gradient1)
+    return gradient1
 
+# функция обнаружения кратеров и записи результатов в шейп-файл
+def crater_recognition(gradient1, cimg, shp_name, cv_start_radius = 100, cv_max_radius = 200, cv_param1 = 30, cv_param2 = 20, cv_min_distance = 100):
+    # circles = circle_detector.detect(gradient1)
+    dtm = gdal.Open(dtm_input) 
+    dtm_prj = dtm.GetProjection()
+    band = dtm.GetRasterBand(1)  
+    dtm_arr = band.ReadAsArray()
+    x_mosaic_size = dtm.RasterXSize
+    y_mosaic_size = dtm.RasterYSize
+    geo_info = dtm.GetGeoTransform()
+    # открываем шейп-файл
+    driver = ogr.GetDriverByName('ESRI Shapefile')
+    dataSource = driver.Open(shp_name, 1)
+    crat_layer = dataSource.GetLayer()
 
-    def gradient_create(mosaic_file_path):
-        image = cv2.imread(mosaic_file_path, 0)
-        sobelx = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=5)  # x
-        sobely = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=5)  # y
-        gradient1 = cv2.subtract(sobelx, sobely)
-        gradient1 = cv2.convertScaleAbs(gradient1)
-        return gradient1
+    gradient2 = gradient1
+    # обнаружение кругов и отрисовка их на том же изображении
+    crat_id = 0
+    radius = cv_start_radius
+    while radius < cv_max_radius:
+        circles = cv2.HoughCircles(gradient1, cv2.HOUGH_GRADIENT, 1, cv_min_distance, param1=cv_param1, param2=cv_param2, minRadius=(radius), maxRadius=(radius+11))
+        radius += 10
+        if circles is None:
+            continue
+        circles = np.uint16(np.around(circles))
+        for i in circles[0, :]:
+            # num_i = list(map(float, i))
+            # нарисовать окружности
+            # print(i)
+            cv2.circle(cimg, (i[0], i[1]), i[2], (0, 255, 0), 2)
+            cv2.circle(cimg, (i[0], i[1]), 2, (0, 0, 255), 3)
 
-    # функция обнаружения кратеров и записи результатов в шейп-файл
-    def crater_recognition(gradient1, cimg, cv_start_radius = 100, cv_max_radius = 200, cv_param1 = 30, cv_param2 = 20, cv_min_distance = 100):
-        # circles = circle_detector.detect(gradient1)
-        dtm = gdal.Open(dtm_input) 
-        dtm_prj = dtm.GetProjection()
-        band = dtm.GetRasterBand(1)  
-        dtm_arr = band.ReadAsArray()
-        x_mosaic_size = dtm.RasterXSize
-        y_mosaic_size = dtm.RasterYSize
-        geo_info = dtm.GetGeoTransform()
-        # открываем шейп-файл
-        driver = ogr.GetDriverByName('ESRI Shapefile')
-        dataSource = driver.Open("crat_circle.shp", 1)
-        crat_layer = dataSource.GetLayer()
-
-        gradient2 = gradient1
-        # обнаружение кругов и отрисовка их на том же изображении
-        crat_id = 0
-        radius = cv_start_radius
-        while radius < cv_max_radius:
-            circles = cv2.HoughCircles(gradient1, cv2.HOUGH_GRADIENT, 1, cv_min_distance, param1=cv_param1, param2=cv_param2, minRadius=(radius), maxRadius=(radius+11))
-            radius += 10
-            if circles is None:
-                continue
-            circles = np.uint16(np.around(circles))
-            for i in circles[0, :]:
-                # num_i = list(map(float, i))
-                # нарисовать окружности
-                # print(i)
-                cv2.circle(cimg, (i[0], i[1]), i[2], (0, 255, 0), 2)
-                cv2.circle(cimg, (i[0], i[1]), 2, (0, 0, 255), 3)
-
-                #заносим атрибутивную информацию в слой
-                x_coord = geo_info[0] + float(i[0]) * geo_info[1]
-                y_coord = geo_info[3] - float(i[1]) * geo_info[1]
-                pointCoord = [x_coord, y_coord]
-                # print(pointCoord)
-                # print(type(pointCoord[1]))
-                point = ogr.Geometry(ogr.wkbPoint)
-                point.AddPoint(pointCoord[0],pointCoord[1])
-                featureDefn = crat_layer.GetLayerDefn()
-                outFeature = ogr.Feature(featureDefn)
-                outFeature.SetGeometry(point)
-                outFeature.SetField(0, crat_id)
-                outFeature.SetField(1, float(i[2])*2)
-                outFeature.SetField('Latitude', x_coord)
-                outFeature.SetField('Longitude', y_coord)
-                crat_layer.CreateFeature(outFeature)
-                outFeature = None
-                crat_id += 1
-        print(crat_id)
-        cv2.imwrite('detected_crat.tif', cimg)
-        cv2.namedWindow('Image', cv2.WINDOW_NORMAL)
-        cv2.resizeWindow('Image', 600, 600)
-        cv2.imshow('Image', cimg)
-        # повторная обработка
-        # radius = cv_start_radius
-        # while radius < cv_max_radius:
-        #     circles = cv2.HoughCircles(gradient1, cv2.HOUGH_GRADIENT, 1, cv_min_distance, param1=cv_param1, param2=cv_param2, minRadius=(radius), maxRadius=(radius+10))
-        #     radius += 10
-        #     if circles is None:
-        #         continue
-        #     circles = np.uint16(np.around(circles))
-        #     for i in circles[0, :]:
-        #         # num_i = list(map(float, i))
-        #         # нарисовать окружности
-        #         print('yes')
-        #         cv2.circle(cimg, (i[0], i[1]), i[2], (255, 255, 0), 2)
-        #         cv2.circle(cimg, (i[0], i[1]), 2, (0, 255, 255), 3) 
-        #     cv2.imwrite('detected_crat.tif', cimg)
-        #     cv2.namedWindow('2', cv2.WINDOW_NORMAL)
-        #     cv2.resizeWindow('2', 600, 600)
-        #     cv2.imshow('2', cimg)
-            
-    print('end')
-    crater_recognition(gradient_create(create_mosaic_file_path(dtm_input)), image_create(create_mosaic_file_path(dtm_input)))
+            #заносим атрибутивную информацию в слой
+            x_coord = geo_info[0] + float(i[0]) * geo_info[1]
+            y_coord = geo_info[3] - float(i[1]) * geo_info[1]
+            pointCoord = [x_coord, y_coord]
+            # print(pointCoord)
+            # print(type(pointCoord[1]))
+            point = ogr.Geometry(ogr.wkbPoint)
+            point.AddPoint(pointCoord[0],pointCoord[1])
+            featureDefn = crat_layer.GetLayerDefn()
+            outFeature = ogr.Feature(featureDefn)
+            outFeature.SetGeometry(point)
+            outFeature.SetField(0, crat_id)
+            outFeature.SetField(1, float(i[2])*2)
+            outFeature.SetField('Latitude', x_coord)
+            outFeature.SetField('Longitude', y_coord)
+            crat_layer.CreateFeature(outFeature)
+            outFeature = None
+            crat_id += 1
+    print(crat_id)
+    cv2.imwrite('detected_crat.tif', cimg)
+    cv2.namedWindow('Image', cv2.WINDOW_NORMAL)
+    cv2.resizeWindow('Image', 600, 600)
+    cv2.imshow('Image', cimg)
+    # повторная обработка
+    # radius = cv_start_radius
+    # while radius < cv_max_radius:
+    #     circles = cv2.HoughCircles(gradient1, cv2.HOUGH_GRADIENT, 1, cv_min_distance, param1=cv_param1, param2=cv_param2, minRadius=(radius), maxRadius=(radius+10))
+    #     radius += 10
+    #     if circles is None:
+    #         continue
+    #     circles = np.uint16(np.around(circles))
+    #     for i in circles[0, :]:
+    #         # num_i = list(map(float, i))
+    #         # нарисовать окружности
+    #         print('yes')
+    #         cv2.circle(cimg, (i[0], i[1]), i[2], (255, 255, 0), 2)
+    #         cv2.circle(cimg, (i[0], i[1]), 2, (0, 255, 255), 3) 
+    #     cv2.imwrite('detected_crat.tif', cimg)
+    #     cv2.namedWindow('2', cv2.WINDOW_NORMAL)
+    #     cv2.resizeWindow('2', 600, 600)
+    #     cv2.imshow('2', cimg)
+        
+print('end')
+    # crater_recognition(gradient_create(create_mosaic_file_path(dtm_input)), image_create(create_mosaic_file_path(dtm_input)))
     # сохраняет получившееся изображение и открывает его 
-
-
-
 
 
 if __name__ == "__main__":
     dtm_input = "C:\\projects\\craters_recognition\\GLD100_test.tif"
     mosaic_file_name = create_mosaic_file_path(dtm_input)
-    mosaic = create_mosaic(dtm_input, mosaic_file_name)
-    first_button(mosaic)
-    #закрывает все
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    create_mosaic(dtm_input, mosaic_file_name)
+    cimg = image_create(mosaic_file_name)
+    gradient = gradient_create(mosaic_file_name)
+    shp_file_name = create_shp("crat_circle.shp")
+    crater_recognition(gradient, cimg, shp_file_name)
+
+#закрывает все
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
