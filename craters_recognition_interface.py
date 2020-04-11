@@ -113,10 +113,6 @@ class MyWidget(QtWidgets.QWidget):
         self.shp_file_open_button.clicked.connect(self.open_shp_file)
         self.algorithm_button.clicked.connect(self.take_parameters_and_use_crater_recognition)
 
-    # функция получения имени открытого DTM(TIFF)-файла
-    def get_DTM(self):
-        file_tiff_open_text = self.file_open_lineedit.text()
-        return file_tiff_open_text
 
     # Функция демонстрации мозаики
     def mosaic_demonstration(self, mosaic_image):
@@ -131,8 +127,8 @@ class MyWidget(QtWidgets.QWidget):
         path_to_file, _ = QtWidgets.QFileDialog.getOpenFileName(
             self, 'Load Image', os.path.dirname(os.path.abspath(__file__)), 'Images (*.img *.TIF *.TIFF)'
          )
-        path_to_file_text = self.file_open_lineedit.setText(path_to_file)
-        tiff_variable = self.get_DTM()
+        self.file_open_lineedit.setText(path_to_file)
+        tiff_variable = self.file_open_lineedit.text()
         shp_file_name = self.change_shp_file(tiff_variable)
         self.change_shp_file_qle.setText(shp_file_name)
         self.mosaic_file_name = create_mosaic_file_path(tiff_variable)
@@ -199,23 +195,22 @@ class MyWidget(QtWidgets.QWidget):
             self.program_message_field.setText(delimiter.join(messages_for_errors))
 
         mosaic_name = self.mosaic_file_name
-        print(mosaic_name)
         cimg = image_create(mosaic_name)
         gradient = gradient_create(mosaic_name)
 
         shp_file_name = self.change_shp_file_qle.text()
         shp_name = create_shp(shp_file_name)
 
-        crater_recognition(
-            gradient1=gradient,
-            cimg=cimg,
-            shp_name=shp_name,
-            cv_start_radius=min_search_radius_value,
-            cv_max_radius=max_search_radius_value,
-            cv_param1=parametr1_value,
-            cv_param2=parametr2_value,
-            cv_min_distance=min_distance_centers_value
-        )
+        # crater_recognition(
+        #     gradient1=gradient,
+        #     cimg=cimg,
+        #     shp_name=shp_name,
+        #     cv_start_radius=min_search_radius_value,
+        #     cv_max_radius=max_search_radius_value,
+        #     cv_param1=parametr1_value,
+        #     cv_param2=parametr2_value,
+        #     cv_min_distance=min_distance_centers_value
+        # )
 
 
 if __name__ == "__main__":
