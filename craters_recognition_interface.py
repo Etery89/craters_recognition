@@ -111,7 +111,7 @@ class MyWidget(QtWidgets.QWidget):
         # Signal buttons
         self.file_open_button.clicked.connect(self.open_tiff_file)
         self.shp_file_open_button.clicked.connect(self.open_shp_file)
-        self.algorithm_button.clicked.connect(self.take_parameters_and_use_first_button)
+        self.algorithm_button.clicked.connect(self.take_parameters_and_use_crater_recognition)
 
     # функция получения имени открытого DTM(TIFF)-файла
     def get_DTM(self):
@@ -135,10 +135,9 @@ class MyWidget(QtWidgets.QWidget):
         tiff_variable = self.get_DTM()
         shp_file_name = self.change_shp_file(tiff_variable)
         self.change_shp_file_qle.setText(shp_file_name)
-        mosaic_file_name = create_mosaic_file_path(tiff_variable)
-        create_mosaic(tiff_variable, mosaic_file_name)
-        self.mosaic_demonstration(mosaic_file_name)
-        return mosaic_file_name
+        self.mosaic_file_name = create_mosaic_file_path(tiff_variable)
+        create_mosaic(tiff_variable, self.mosaic_file_name)
+        self.mosaic_demonstration(self.mosaic_file_name)
 
     # Функция открытия Шейп-файла нажатием кнопки
     @Slot()
@@ -168,7 +167,7 @@ class MyWidget(QtWidgets.QWidget):
 
 
     @Slot()
-    def take_parameters_and_use_first_button(self, mosaic):
+    def take_parameters_and_use_crater_recognition(self, mosaic):
         messages_for_errors = []
 
         error_message_1 = 'Неправильный тип данных в поле "Minimum distance between centers". Введите целое число'
@@ -199,10 +198,10 @@ class MyWidget(QtWidgets.QWidget):
             delimiter = '\n'
             self.program_message_field.setText(delimiter.join(messages_for_errors))
 
-        # mosaic_name = self.open_tiff_file()
-        # print(mosaic_name)
-        cimg = image_create(mosaic)
-        gradient = gradient_create(mosaic)
+        mosaic_name = self.mosaic_file_name
+        print(mosaic_name)
+        cimg = image_create(mosaic_name)
+        gradient = gradient_create(mosaic_name)
 
         shp_file_name = self.change_shp_file_qle.text()
         shp_name = create_shp(shp_file_name)
