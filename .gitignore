@@ -4,8 +4,6 @@ __pycache__/
 *$py.class
 
 crat/
-*.tif
-*.tiff
 .vscode/
 
 # C extensions
@@ -133,3 +131,15 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Other files
+.ipynb/
+.jpg
+.whl
+.tiff
+.tif
+.shp
+.tfw
+.tif.aux.xml
+.tif.vat.dbf
+.test_images/
