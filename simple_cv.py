@@ -104,7 +104,7 @@ def gradient_create(mosaic_file_path):
     return gradient1
 
 # функция обнаружения кратеров и записи результатов в шейп-файл
-def crater_recognition(gradient1, cimg, shp_name, cv_start_radius = 100, cv_max_radius = 200, cv_param1 = 30, cv_param2 = 20, cv_min_distance = 100):
+def crater_recognition(gradient1, cimg, shp_name, cv_start_radius = 100, cv_max_radius = 200, cv_param1 = 30, cv_param2 = 25, cv_min_distance = 100):
     # circles = circle_detector.detect(gradient1)
     dtm = gdal.Open(dtm_input) 
     dtm_prj = dtm.GetProjection()
@@ -119,6 +119,25 @@ def crater_recognition(gradient1, cimg, shp_name, cv_start_radius = 100, cv_max_
     crat_layer = dataSource.GetLayer()
 
     gradient2 = gradient1
+
+
+
+    ret, thresh = cv2.threshold(gradient2, 127, 255, 0)
+    # применяем цветовой фильтр
+    # ищем контуры и складируем их в переменную contours
+    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    # hierarchy хранит информацию об иерархии
+    # отображаем контуры поверх изображения
+    image = cv2.drawContours(gradient2, contours, -1, (0, 255, 0), 3)
+    # выводим итоговое изображение в окно
+    cv2.namedWindow('All_con', cv2.WINDOW_NORMAL)
+    cv2.resizeWindow('All_con', 600, 600)
+    cv2.imshow('All_con', gradient2)
+
+    cv2.namedWindow('grad1', cv2.WINDOW_NORMAL)
+    cv2.resizeWindow('grad1', 600, 600)
+    cv2.imshow('grad1', gradient1)
+
     # обнаружение кругов и отрисовка их на том же изображении
     crat_id = 0
     radius = cv_start_radius
@@ -197,4 +216,3 @@ if __name__ == "__main__":
 #закрывает все
 cv2.waitKey(0)
 cv2.destroyAllWindows()
-
