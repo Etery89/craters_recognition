@@ -60,12 +60,12 @@ def create_mosaic(DTM_input, mosaic_file_name):
    
 
     #создание shp файла
-def create_shp(shp_name):
+def create_shp(shp_name, DTM_input):
     driverName = "ESRI Shapefile"
     drv = ogr.GetDriverByName(driverName)
     ogrData = drv.CreateDataSource(shp_name)
 
-    dtm = gdal.Open(dtm_input)
+    dtm = gdal.Open(DTM_input)
     dtm_prj = dtm.GetProjection()
     srs = osr.SpatialReference(wkt=dtm_prj)
     crat_layer = ogrData.CreateLayer(shp_name, srs, ogr.wkbPoint)

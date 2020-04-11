@@ -113,11 +113,10 @@ class MyWidget(QtWidgets.QWidget):
         self.shp_file_open_button.clicked.connect(self.open_shp_file)
         self.algorithm_button.clicked.connect(self.take_parameters_and_use_crater_recognition)
 
-
     # Функция демонстрации мозаики
-    def mosaic_demonstration(self, mosaic_image):
+    def show_mosaic(self, mosaic_image):
         mosaic_image_pixmap = QtGui.QPixmap(mosaic_image)
-        mosaic_to_image_label = self.image_label.setPixmap(
+        self.image_label.setPixmap(
             mosaic_image_pixmap.scaled(600, 800, QtCore.Qt.KeepAspectRatio)
             )
 
@@ -129,11 +128,11 @@ class MyWidget(QtWidgets.QWidget):
          )
         self.file_open_lineedit.setText(path_to_file)
         tiff_variable = self.file_open_lineedit.text()
-        shp_file_name = self.change_shp_file(tiff_variable)
+        shp_file_name = self.generate_shp_file_name_and_path(tiff_variable)
         self.change_shp_file_qle.setText(shp_file_name)
         self.mosaic_file_name = create_mosaic_file_path(tiff_variable)
         create_mosaic(tiff_variable, self.mosaic_file_name)
-        self.mosaic_demonstration(self.mosaic_file_name)
+        self.show_mosaic(self.mosaic_file_name)
 
     # Функция открытия Шейп-файла нажатием кнопки
     @Slot()
@@ -142,12 +141,15 @@ class MyWidget(QtWidgets.QWidget):
         path_to_the_shp_file_text = self.shp_file_open_lineedit.setText(path_to_the_shp_file)
 
     # Функция выбора имени шейп-файла
-    def change_shp_file(self, tiff_file_name):
-        tiff_file_name = tiff_file_name.split('/')
-        tiff_file_name.pop(len(tiff_file_name)-1)
-        tiff_file_name.append('crat_circle.shp')
-        delimiter = '/'
-        shp_file_name = delimiter.join(tiff_file_name)
+    def generate_shp_file_name_and_path(self, tiff_file_name):
+        tiff_basename = os.path.basename(tiff_file_name)
+        tiff_dirname = os.path.dirname(tiff_file_name)
+        shp_basename_list = tiff_basename.split('.')
+        shp_basename_list.pop(len(shp_basename_list)-1)
+        shp_basename_list.append('craters.shp')
+        delimiter = '_'
+        shp_basename = delimiter.join(shp_basename_list)
+        shp_file_name = os.path.join(tiff_dirname, shp_basename)
         return shp_file_name
 
     # Функция проверки значений параметров на соответствие типу данных
@@ -199,18 +201,20 @@ class MyWidget(QtWidgets.QWidget):
         gradient = gradient_create(mosaic_name)
 
         shp_file_name = self.change_shp_file_qle.text()
-        shp_name = create_shp(shp_file_name)
+        tiff_name = self.file_open_lineedit.text()
+        shp_name = create_shp(shp_file_name, tiff_name)
+        print(shp_name)
 
-        # crater_recognition(
-        #     gradient1=gradient,
-        #     cimg=cimg,
-        #     shp_name=shp_name,
-        #     cv_start_radius=min_search_radius_value,
-        #     cv_max_radius=max_search_radius_value,
-        #     cv_param1=parametr1_value,
-        #     cv_param2=parametr2_value,
-        #     cv_min_distance=min_distance_centers_value
-        # )
+        crater_recognition(
+            gradient1=gradient,
+            cimg=cimg,
+            shp_name=shp_name,
+            cv_start_radius=min_search_radius_value,
+            cv_max_radius=max_search_radius_value,
+            cv_param1=parametr1_value,
+            cv_param2=parametr2_value,
+            cv_min_distance=min_distance_centers_value
+        )
 
 
 if __name__ == "__main__":
