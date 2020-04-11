@@ -200,18 +200,15 @@ print('end')
     # crater_recognition(gradient_create(create_mosaic_file_path(dtm_input)), image_create(create_mosaic_file_path(dtm_input)))
     # сохраняет получившееся изображение и открывает его 
 
-# def first_button(mosaic):
 
-#     crater_recognition(gradient_create(create_mosaic_file_path(dtm_input)), image_create(create_mosaic_file_path(dtm_input)),  create_shp("crat_circle.shp"))
-
-# if __name__ == "__main__":
-#     first_button()
 if __name__ == "__main__":
     dtm_input = "C:\\projects\\craters_recognition\\GLD100_test.tif"
     mosaic_file_name = create_mosaic_file_path(dtm_input)
-    mosaic = create_mosaic(dtm_input, mosaic_file_name)
-    # first_button(mosaic)
-    crater_recognition(gradient_create(create_mosaic_file_path(dtm_input)), image_create(create_mosaic_file_path(dtm_input)),  create_shp("crat_circle.shp"))
+    create_mosaic(dtm_input, mosaic_file_name)
+    cimg = image_create(mosaic_file_name)
+    gradient = gradient_create(mosaic_file_name)
+    shp_file_name = create_shp("crat_circle.shp")
+    crater_recognition(gradient, cimg, shp_file_name)
 
 #закрывает все
 cv2.waitKey(0)
