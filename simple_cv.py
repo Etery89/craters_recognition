@@ -17,15 +17,12 @@ from numpy import zeros
 from numpy import uint8
 
 
-
-
-
-    
 def create_mosaic_file_path(dtm_input):
     mosaic_file_name = dtm_input.split('.')[0] + '_mosaic.tif'
     return mosaic_file_name
 
-    # созданиие массива мозаики
+
+# созданиие массива мозаики
 def hillshade(array, azimuth, angle_altitude):
     x, y = gradient(array)
     slope = pi/2. - arctan(sqrt(x*x + y*y))
@@ -37,8 +34,10 @@ def hillshade(array, azimuth, angle_altitude):
     + cos(altituderad) * cos(slope)\
     * cos(azimuthrad - aspect)
     return 255*(shaded + 1)/2
+
+
 # функция создает мозаику с использованием исходного геофайла
-def create_mosaic(DTM_input, mosaic_file_name):
+def store_mosaic(DTM_input, mosaic_file_name):
     dtm = gdal.Open(DTM_input)
     dtm_prj = dtm.GetProjection()
     band = dtm.GetRasterBand(1)
@@ -54,12 +53,10 @@ def create_mosaic(DTM_input, mosaic_file_name):
     mosaic_dataset.GetRasterBand(1).WriteArray(hs_array)
     mosaic_dataset = None
 
-# create_mosaic(dtm_input, create_mosaic_file_path(dtm_input))
+# store_mosaic(dtm_input, create_mosaic_file_path(dtm_input))
 
 
-   
-
-    #создание shp файла
+#создание shp файла
 def create_shp(shp_name, DTM_input):
     driverName = "ESRI Shapefile"
     drv = ogr.GetDriverByName(driverName)
@@ -85,6 +82,7 @@ def create_shp(shp_name, DTM_input):
 
 # def first_button(mosaic):
 
+
 def image_create(mosaic_file_path):
     #открытие исходной мозаики
     # mosaic = dtm_input.split('.')[0] + '_mosaic.tif'
@@ -104,9 +102,9 @@ def gradient_create(mosaic_file_path):
     return gradient1
 
 # функция обнаружения кратеров и записи результатов в шейп-файл
-def crater_recognition(gradient1, cimg, shp_name, cv_start_radius = 100, cv_max_radius = 200, cv_param1 = 30, cv_param2 = 25, cv_min_distance = 100):
+def crater_recognition(DTM_input, gradient1, cimg, shp_name, cv_start_radius = 100, cv_max_radius = 200, cv_param1 = 30, cv_param2 = 25, cv_min_distance = 100):
     # circles = circle_detector.detect(gradient1)
-    dtm = gdal.Open(dtm_input) 
+    dtm = gdal.Open(DTM_input) 
     dtm_prj = dtm.GetProjection()
     band = dtm.GetRasterBand(1)  
     dtm_arr = band.ReadAsArray()
@@ -204,11 +202,11 @@ print('end')
 if __name__ == "__main__":
     dtm_input = "C:\\projects\\craters_recognition\\GLD100_test.tif"
     mosaic_file_name = create_mosaic_file_path(dtm_input)
-    create_mosaic(dtm_input, mosaic_file_name)
+    store_mosaic(dtm_input, mosaic_file_name)
     cimg = image_create(mosaic_file_name)
-    gradient = gradient_create(mosaic_file_name)
+    gradient_1 = gradient_create(mosaic_file_name)
     shp_file_name = create_shp("crat_circle.shp")
-    crater_recognition(gradient, cimg, shp_file_name)
+    crater_recognition(dtm_input, gradient_1, cimg, shp_file_name)
 
 #закрывает все
 cv2.waitKey(0)

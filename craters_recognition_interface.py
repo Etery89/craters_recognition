@@ -4,7 +4,7 @@ from PySide2 import QtWidgets, QtGui, QtCore
 from PySide2.QtCore import Slot
 
 from simple_cv import create_mosaic_file_path
-from simple_cv import create_mosaic
+from simple_cv import store_mosaic
 from simple_cv import create_shp
 from simple_cv import image_create
 from simple_cv import gradient_create
@@ -126,11 +126,11 @@ class MyWidget(QtWidgets.QWidget):
             self, 'Load Image', os.path.dirname(os.path.abspath(__file__)), 'Images (*.img *.TIF *.TIFF)'
          )
         self.file_open_le.setText(path_to_file)
-        tiff_variable = self.file_open_le.text()
-        shp_file_name = self.default_shp_filename(tiff_variable)
+        tiff_filename = self.file_open_le.text()
+        shp_file_name = self.default_shp_filename(tiff_filename)
         self.choose_shp_file_le.setText(shp_file_name)
-        self.mosaic_file_name = create_mosaic_file_path(tiff_variable)
-        create_mosaic(tiff_variable, self.mosaic_file_name)
+        self.mosaic_file_name = create_mosaic_file_path(tiff_filename)
+        store_mosaic(tiff_filename, self.mosaic_file_name)
         self.show_mosaic(self.mosaic_file_name)
 
     # Функция открытия Шейп-файла нажатием кнопки
@@ -156,14 +156,13 @@ class MyWidget(QtWidgets.QWidget):
     # Функция проверки значений параметров на соответствие типу данных
     def get_in_parameter(self, parameter_field_name, error_msg, errors_list):
         try:
-            parameter_field_name_value = getattr(self, parameter_field_name)
-            parameter_value = int(parameter_field_name_value.text())
+            parameter_value_text = getattr(self, parameter_field_name)
+            parameter_value = int(parameter_value_text.text())
             return parameter_value
         except ValueError:
-            parameter_field_name_value.clear()
+            parameter_value_text.clear()
             errors_list.append(error_msg)
             return None
-
 
     @Slot()
     def recognize_and_show_craters(self, mosaic):
@@ -196,26 +195,28 @@ class MyWidget(QtWidgets.QWidget):
         else:
             delimiter = '\n'
             self.program_message_field.setText(delimiter.join(messages_for_errors))
+        try:
+            mosaic_name = self.mosaic_file_name
+            cimg = image_create(mosaic_name)
+            gradient = gradient_create(mosaic_name)
 
-        mosaic_name = self.mosaic_file_name
-        cimg = image_create(mosaic_name)
-        gradient = gradient_create(mosaic_name)
+            shp_file_name = self.choose_shp_file_le.text()
+            tiff_name = self.file_open_le.text()
+            shp_name = create_shp(shp_file_name, tiff_name)
 
-        shp_file_name = self.choose_shp_file_le.text()
-        tiff_name = self.file_open_le.text()
-        shp_name = create_shp(shp_file_name, tiff_name)
-        print(shp_name)
-
-        crater_recognition(
-            gradient1=gradient,
-            cimg=cimg,
-            shp_name=shp_name,
-            cv_start_radius=min_search_radius_value,
-            cv_max_radius=max_search_radius_value,
-            cv_param1=parametr1_value,
-            cv_param2=parametr2_value,
-            cv_min_distance=min_distance_centers_value
-        )
+            crater_recognition(
+                DTM_input=tiff_name,
+                gradient1=gradient,
+                cimg=cimg,
+                shp_name=shp_name,
+                cv_start_radius=min_search_radius_value,
+                cv_max_radius=max_search_radius_value,
+                cv_param1=parametr1_value,
+                cv_param2=parametr2_value,
+                cv_min_distance=min_distance_centers_value
+            )
+        except AttributeError:
+            self.program_message_field.setText('Не выбран файл для обработки. Пожалуйста, откройте файл.')
 
 
 if __name__ == "__main__":
