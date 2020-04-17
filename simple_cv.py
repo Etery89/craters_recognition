@@ -173,7 +173,9 @@ def crater_recognition(gradient_image, marked_up_image, shp_name, cv_start_radiu
             outFeature = None
             crat_id += 1
     print(crat_id)
+    return marked_up_image
     # сохраняет получившееся изображение и открывает его 
+def store_marked_up_image (marked_up_image):  
     cv2.imwrite('detected_crat.tif', marked_up_image)
     cv2.namedWindow('Image', cv2.WINDOW_NORMAL)
     cv2.resizeWindow('Image', 600, 600)
@@ -215,8 +217,8 @@ if __name__ == "__main__":
     mosaic = create_stored_mosaic(dtm_input, mosaic_file_name)
     create_stored_shp("crat_circle.shp")
     # first_button(mosaic)
-    crater_recognition(create_gradient(default_mosaic_filename(dtm_input)), get_colorized_image(default_mosaic_filename(dtm_input)),  "crat_circle.shp")
-
+    # crater_recognition(create_gradient(default_mosaic_filename(dtm_input)), get_colorized_image(default_mosaic_filename(dtm_input)),  "crat_circle.shp")
+    store_marked_up_image(crater_recognition(create_gradient(default_mosaic_filename(dtm_input)), get_colorized_image(default_mosaic_filename(dtm_input)),  "crat_circle.shp"))
 #закрывает все
 cv2.waitKey(0)
 cv2.destroyAllWindows()
