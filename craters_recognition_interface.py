@@ -127,8 +127,8 @@ class MyWidget(QtWidgets.QWidget):
          )
         self.file_open_le.setText(path_to_file)
         tiff_filename = self.file_open_le.text()
-        shp_file_name = self.default_shp_filename(tiff_filename)
-        self.choose_shp_file_le.setText(shp_file_name)
+        shp_filename = self.default_shp_filename(tiff_filename)
+        self.choose_shp_file_le.setText(shp_filename)
         self.mosaic_file_name = create_mosaic_file_path(tiff_filename)
         store_mosaic(tiff_filename, self.mosaic_file_name)
         self.show_mosaic(self.mosaic_file_name)
@@ -200,15 +200,15 @@ class MyWidget(QtWidgets.QWidget):
             cimg = image_create(mosaic_name)
             gradient = gradient_create(mosaic_name)
 
-            shp_file_name = self.choose_shp_file_le.text()
-            tiff_name = self.file_open_le.text()
-            shp_name = create_shp(shp_file_name, tiff_name)
+            shp_filename = self.choose_shp_file_le.text()
+            tiff_filename = self.file_open_le.text()
+            final_shp_filename = create_shp(shp_filename, tiff_filename)
 
             crater_recognition(
-                DTM_input=tiff_name,
+                DTM_input=tiff_filename,
                 gradient1=gradient,
                 cimg=cimg,
-                shp_name=shp_name,
+                shp_name=final_shp_filename,
                 cv_start_radius=min_search_radius_value,
                 cv_max_radius=max_search_radius_value,
                 cv_param1=parametr1_value,
