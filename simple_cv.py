@@ -216,9 +216,10 @@ if __name__ == "__main__":
     mosaic_file_name = default_mosaic_filename(dtm_input)
     mosaic = create_stored_mosaic(dtm_input, mosaic_file_name)
     create_stored_shp("crat_circle.shp")
-    # first_button(mosaic)
-    # crater_recognition(create_gradient(default_mosaic_filename(dtm_input)), get_colorized_image(default_mosaic_filename(dtm_input)),  "crat_circle.shp")
-    store_marked_up_image(crater_recognition(create_gradient(default_mosaic_filename(dtm_input)), get_colorized_image(default_mosaic_filename(dtm_input)),  "crat_circle.shp"))
+    grad = create_gradient(default_mosaic_filename(dtm_input))
+    color_image = get_colorized_image(default_mosaic_filename(dtm_input))
+    marked_up_image_with_circles = crater_recognition(grad, color_image,  "crat_circle.shp")
+    store_marked_up_image(marked_up_image_with_circles)
 #закрывает все
 cv2.waitKey(0)
 cv2.destroyAllWindows()
