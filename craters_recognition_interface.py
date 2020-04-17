@@ -3,12 +3,13 @@ import os
 from PySide2 import QtWidgets, QtGui, QtCore
 from PySide2.QtCore import Slot
 
-from simple_cv import create_mosaic_file_path
-from simple_cv import store_mosaic
-from simple_cv import create_shp
-from simple_cv import image_create
-from simple_cv import gradient_create
+from simple_cv import default_mosaic_filename
+from simple_cv import create_stored_mosaic
+from simple_cv import create_stored_shp
+from simple_cv import get_colorized_image
+from simple_cv import create_gradient
 from simple_cv import crater_recognition
+from simple_cv import store_marked_up_image
 
 
 class MyWidget(QtWidgets.QWidget):
@@ -116,7 +117,7 @@ class MyWidget(QtWidgets.QWidget):
     def show_mosaic(self, mosaic_image):
         mosaic_image_pixmap = QtGui.QPixmap(mosaic_image)
         self.image_lb.setPixmap(
-            mosaic_image_pixmap.scaled(600, 800, QtCore.Qt.KeepAspectRatio)
+            mosaic_image_pixmap.scaled(720, 920, QtCore.Qt.KeepAspectRatio)
             )
 
     # File open function
@@ -129,9 +130,9 @@ class MyWidget(QtWidgets.QWidget):
         tiff_filename = self.file_open_le.text()
         shp_filename = self.default_shp_filename(tiff_filename)
         self.choose_shp_file_le.setText(shp_filename)
-        self.mosaic_file_name = create_mosaic_file_path(tiff_filename)
-        store_mosaic(tiff_filename, self.mosaic_file_name)
-        self.show_mosaic(self.mosaic_file_name)
+        self.mosaic_filename = default_mosaic_filename(tiff_filename)
+        create_stored_mosaic(tiff_filename, self.mosaic_filename)
+        self.show_mosaic(self.mosaic_filename)
 
     # Функция открытия Шейп-файла нажатием кнопки
     @Slot()
@@ -196,25 +197,30 @@ class MyWidget(QtWidgets.QWidget):
             delimiter = '\n'
             self.program_message_field.setText(delimiter.join(messages_for_errors))
         try:
-            mosaic_name = self.mosaic_file_name
-            cimg = image_create(mosaic_name)
-            gradient = gradient_create(mosaic_name)
+            mosaic_filename = self.mosaic_filename
+            marked_up_image = get_colorized_image(mosaic_filename)
+            gradient_image = create_gradient(mosaic_filename)
 
             shp_filename = self.choose_shp_file_le.text()
             tiff_filename = self.file_open_le.text()
-            final_shp_filename = create_shp(shp_filename, tiff_filename)
 
-            crater_recognition(
-                DTM_input=tiff_filename,
-                gradient1=gradient,
-                cimg=cimg,
-                shp_name=final_shp_filename,
+            create_stored_shp(shp_name=shp_filename, dtm_input=tiff_filename)
+
+            new_marked_up_image = crater_recognition(
+                dtm_input=tiff_filename,
+                gradient_image=gradient_image,
+                marked_up_image=marked_up_image,
+                shp_name=shp_filename,
                 cv_start_radius=min_search_radius_value,
                 cv_max_radius=max_search_radius_value,
                 cv_param1=parametr1_value,
                 cv_param2=parametr2_value,
                 cv_min_distance=min_distance_centers_value
             )
+
+            marked_up_image_filename = store_marked_up_image(new_marked_up_image)
+            self.show_mosaic(marked_up_image_filename)
+
         except AttributeError:
             self.program_message_field.setText('Не выбран файл для обработки. Пожалуйста, откройте файл.')
 
