@@ -177,13 +177,11 @@ def crater_recognition(dtm_input, gradient_image, marked_up_image, shp_name, cv_
 
 
     # сохраняет получившееся изображение и открывает его 
-def store_marked_up_image(marked_up_image):
-    marked_up_image_filename = 'detected_crat.tif'
+def store_marked_up_image(marked_up_image, marked_up_image_filename):
     cv2.imwrite(marked_up_image_filename, marked_up_image)
     # cv2.namedWindow('Image', cv2.WINDOW_NORMAL)
     # cv2.resizeWindow('Image', 600, 600)
     # cv2.imshow('Image', marked_up_image)
-    return marked_up_image_filename
 
     # повторная обработка
     # radius = cv_start_radius

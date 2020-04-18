@@ -56,6 +56,18 @@ class MyWidget(QtWidgets.QWidget):
         layout_for_min_distance.addWidget(min_distance_centers_lb)
         layout_for_min_distance.addWidget(self.min_distance_centers_le)
 
+
+        def add_param_to_grid(self, label, value, grid, row, col):
+            parametr_1_lb = QtWidgets.QLabel('Parameter 1')
+            parametr_1_le = QtWidgets.QLineEdit('30')
+            parameters_layout.addWidget(parametr_1_lb, 0, 0)
+            parameters_layout.addWidget(self.parametr_1_le, 0, 1)
+            return parametr_1_le
+            pass
+
+
+
+
         # QGridLayout "Parameters"
         parametr_1_lb = QtWidgets.QLabel('Parameter 1')
         self.parametr_1_le = QtWidgets.QLineEdit('30')
@@ -67,6 +79,9 @@ class MyWidget(QtWidgets.QWidget):
         self.max_search_radius_le = QtWidgets.QLineEdit('200')
 
         parameters_layout = QtWidgets.QGridLayout()
+        self.parametr_1_le = self.add_param_to_grid('Parameter 1', '30', parameters_layout, 0, 0)
+
+        add_param_to_grid(self, label, value, parameters_layout, 0, 1)
         parameters_layout.addWidget(parametr_1_lb, 0, 0)
         parameters_layout.addWidget(self.parametr_1_le, 0, 1)
         parameters_layout.addWidget(parametr_2_lb, 1, 0)
@@ -152,6 +167,10 @@ class MyWidget(QtWidgets.QWidget):
         delimiter = '_'
         shp_basename = delimiter.join(shp_basename_list)
         shp_file_name = os.path.join(tiff_dirname, shp_basename)
+        # было 
+        # os.path.join(dirname, filename)
+        # стало
+        # os.path.join(*os.path.split(dirname), filename)
         return shp_file_name
 
     # Функция проверки значений параметров на соответствие типу данных
@@ -218,7 +237,10 @@ class MyWidget(QtWidgets.QWidget):
                 cv_min_distance=min_distance_centers_value
             )
 
-            marked_up_image_filename = store_marked_up_image(new_marked_up_image)
+            marked_up_image_filename = 'detected_crat.tif'
+            store_marked_up_image(
+                new_marked_up_image, marked_up_image_filename)
+
             self.show_mosaic(marked_up_image_filename)
 
         except AttributeError:
