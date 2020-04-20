@@ -56,40 +56,18 @@ class MyWidget(QtWidgets.QWidget):
         layout_for_min_distance.addWidget(min_distance_centers_lb)
         layout_for_min_distance.addWidget(self.min_distance_centers_le)
 
-
-        def add_param_to_grid(self, label, value, grid, row, col):
-            parametr_1_lb = QtWidgets.QLabel('Parameter 1')
-            parametr_1_le = QtWidgets.QLineEdit('30')
-            parameters_layout.addWidget(parametr_1_lb, 0, 0)
-            parameters_layout.addWidget(self.parametr_1_le, 0, 1)
-            return parametr_1_le
-            pass
-
-
-
-
-        # QGridLayout "Parameters"
-        parametr_1_lb = QtWidgets.QLabel('Parameter 1')
-        self.parametr_1_le = QtWidgets.QLineEdit('30')
-        parametr_2_lb = QtWidgets.QLabel('Parameter 2')
-        self.parametr_2_le = QtWidgets.QLineEdit('20')
-        min_search_radius_lb = QtWidgets.QLabel('Minimum Search Radius')
-        self.min_search_radius_le = QtWidgets.QLineEdit('100')
-        max_search_radius_lb = QtWidgets.QLabel('Maximum Search Radius')
-        self.max_search_radius_le = QtWidgets.QLineEdit('200')
+        def add_param_to_grid(label, value, grid, row, col):
+            label_widget = QtWidgets.QLabel(label)
+            lineedit_widget = QtWidgets.QLineEdit(value)
+            grid.addWidget(label_widget, row, col)
+            grid.addWidget(lineedit_widget, row, col+1)
+            return lineedit_widget
 
         parameters_layout = QtWidgets.QGridLayout()
-        self.parametr_1_le = self.add_param_to_grid('Parameter 1', '30', parameters_layout, 0, 0)
-
-        add_param_to_grid(self, label, value, parameters_layout, 0, 1)
-        parameters_layout.addWidget(parametr_1_lb, 0, 0)
-        parameters_layout.addWidget(self.parametr_1_le, 0, 1)
-        parameters_layout.addWidget(parametr_2_lb, 1, 0)
-        parameters_layout.addWidget(self.parametr_2_le, 1, 1)
-        parameters_layout.addWidget(min_search_radius_lb, 0, 2)
-        parameters_layout.addWidget(self.min_search_radius_le, 0, 3)
-        parameters_layout.addWidget(max_search_radius_lb, 1, 2)
-        parameters_layout.addWidget(self.max_search_radius_le, 1, 3)
+        self.parametr_1_le = add_param_to_grid('Parameter 1', '30', parameters_layout, 0, 0)
+        self.parametr_2_le = add_param_to_grid('Parameter 2', '20', parameters_layout, 1, 0)
+        self.min_search_radius_le = add_param_to_grid('Minimum Search Radius', '100', parameters_layout, 0, 2)
+        self.max_search_radius_le = add_param_to_grid('Maximum Search Radius', '200', parameters_layout, 1, 2)
 
         # Program message output field
         self.program_message_field = QtWidgets.QTextEdit('Program messages')
