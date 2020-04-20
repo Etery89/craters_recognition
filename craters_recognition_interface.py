@@ -163,7 +163,8 @@ class MyWidget(QtWidgets.QWidget):
             else:
                 parameter_value_text.clear()
                 errors_list.append(error_msg_2)
-        except ValueError:
+                return None
+        except(ValueError, TypeError):
             parameter_value_text.clear()
             errors_list.append(error_msg_1)
             return None
