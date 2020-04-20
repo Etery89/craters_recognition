@@ -42,23 +42,26 @@ def hillshade(array, azimuth, angle_altitude):
 # create_mosaic --> create_stored_mosaic 
 def create_stored_mosaic(DTM_input, mosaic_file_name):
     dtm = gdal.Open(DTM_input)
-    dtm_prj = dtm.GetProjection()
-    band = dtm.GetRasterBand(1)
-    arr = band.ReadAsArray()
-    hs_array = hillshade(arr, 180, 90)
+    print(dtm)
+    if dtm:
+        error_msg = 'Открытый файл не является изображением типа geo tiff.'
+        return error_msg
+    else:
+        dtm_prj = dtm.GetProjection()
+        band = dtm.GetRasterBand(1)
+        arr = band.ReadAsArray()
+        hs_array = hillshade(arr, 180, 90)
 
-    x_mosaic_size = dtm.RasterXSize
-    y_mosaic_size = dtm.RasterYSize
-    driver = gdal.GetDriverByName('GTiff')
-    mosaic_dataset = driver.Create(mosaic_file_name, x_mosaic_size, y_mosaic_size, 1, gdal.GDT_Byte)
+        x_mosaic_size = dtm.RasterXSize
+        y_mosaic_size = dtm.RasterYSize
+        driver = gdal.GetDriverByName('GTiff')
+        mosaic_dataset = driver.Create(mosaic_file_name, x_mosaic_size, y_mosaic_size, 1, gdal.GDT_Byte)
 
-    mosaic_dataset.SetProjection(dtm_prj)
-    mosaic_dataset.GetRasterBand(1).WriteArray(hs_array)
-    mosaic_dataset = None
-
-
-
-   
+        mosaic_dataset.SetProjection(dtm_prj)
+        mosaic_dataset.GetRasterBand(1).WriteArray(hs_array)
+        mosaic_dataset = None
+        return ''
+  
 
     # создание shp файла
     # create_shp --> store_shape

@@ -125,8 +125,12 @@ class MyWidget(QtWidgets.QWidget):
         shp_filename = self.default_shp_filename(tiff_filename)
         self.choose_shp_file_le.setText(shp_filename)
         self.mosaic_filename = default_mosaic_filename(tiff_filename)
-        create_stored_mosaic(tiff_filename, self.mosaic_filename)
-        self.show_mosaic(self.mosaic_filename)
+        msg = create_stored_mosaic(tiff_filename, self.mosaic_filename)
+        if msg == '':
+            self.show_mosaic(self.mosaic_filename)
+            self.program_message_field.clear()
+        else:
+            self.program_message_field.setText(msg)
 
     # Функция открытия Шейп-файла нажатием кнопки
     @Slot()
@@ -134,7 +138,8 @@ class MyWidget(QtWidgets.QWidget):
         path_to_the_shp_file, _ = QtWidgets.QFileDialog.getOpenFileName(
             self, 'Load Shp file', os.path.dirname(os.path.abspath(__file__)), 'Files (*.Shp)'
             )
-        self.shp_file_open_le.setText(path_to_the_shp_file)
+        path_to_the_shp_file_for_wind = QtCore.QDir.toNativeSeparators(path_to_the_shp_file)
+        self.shp_file_open_le.setText(path_to_the_shp_file_for_wind)
 
     # Функция выбора имени шейп-файла
     def default_shp_filename(self, tiff_file_name):
@@ -217,7 +222,6 @@ class MyWidget(QtWidgets.QWidget):
                 new_marked_up_image, marked_up_image_filename)
 
             self.show_mosaic(marked_up_image_filename)
-
         except AttributeError:
             self.program_message_field.setText('Не выбран файл для обработки. Пожалуйста, откройте файл.')
 
