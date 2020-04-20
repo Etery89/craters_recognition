@@ -119,7 +119,8 @@ class MyWidget(QtWidgets.QWidget):
         path_to_file, _ = QtWidgets.QFileDialog.getOpenFileName(
             self, 'Load Image', os.path.dirname(os.path.abspath(__file__)), 'Images (*.img *.TIF *.TIFF)'
          )
-        self.file_open_le.setText(path_to_file)
+        path_to_file_for_wind = QtCore.QDir.toNativeSeparators(path_to_file)
+        self.file_open_le.setText(path_to_file_for_wind)
         tiff_filename = self.file_open_le.text()
         shp_filename = self.default_shp_filename(tiff_filename)
         self.choose_shp_file_le.setText(shp_filename)
@@ -144,11 +145,7 @@ class MyWidget(QtWidgets.QWidget):
         shp_basename_list.append('craters.shp')
         delimiter = '_'
         shp_basename = delimiter.join(shp_basename_list)
-        shp_file_name = os.path.join(tiff_dirname, shp_basename)
-        # было 
-        # os.path.join(dirname, filename)
-        # стало
-        # os.path.join(*os.path.split(dirname), filename)
+        shp_file_name = os.path.join(*os.path.split(tiff_dirname), shp_basename)
         return shp_file_name
 
     # Функция проверки значений параметров на соответствие типу данных
