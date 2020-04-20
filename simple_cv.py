@@ -44,9 +44,6 @@ def create_stored_mosaic(DTM_input, mosaic_file_name):
     dtm = gdal.Open(DTM_input)
     print(dtm)
     if dtm:
-        error_msg = 'Открытый файл не является изображением типа geo tiff.'
-        return error_msg
-    else:
         dtm_prj = dtm.GetProjection()
         band = dtm.GetRasterBand(1)
         arr = band.ReadAsArray()
@@ -61,6 +58,9 @@ def create_stored_mosaic(DTM_input, mosaic_file_name):
         mosaic_dataset.GetRasterBand(1).WriteArray(hs_array)
         mosaic_dataset = None
         return ''
+    else:
+        error_msg = 'Открытый файл не является изображением типа geo tiff.'
+        return error_msg
   
 
     # создание shp файла

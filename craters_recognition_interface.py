@@ -154,40 +154,49 @@ class MyWidget(QtWidgets.QWidget):
         return shp_file_name
 
     # Функция проверки значений параметров на соответствие типу данных
-    def get_in_parameter(self, parameter_field_name, error_msg, errors_list):
+    def get_in_parameter(self, parameter_field_name, error_msg_1, error_msg_2, errors_list):
         try:
             parameter_value_text = getattr(self, parameter_field_name)
             parameter_value = int(parameter_value_text.text())
-            return parameter_value
+            if parameter_value > 0:
+                return parameter_value
+            else:
+                parameter_value_text.clear()
+                errors_list.append(error_msg_2)
         except ValueError:
             parameter_value_text.clear()
-            errors_list.append(error_msg)
+            errors_list.append(error_msg_1)
             return None
 
     @Slot()
     def recognize_and_show_craters(self, mosaic):
         messages_for_errors = []
 
-        error_message_1 = 'Неправильный тип данных в поле "Minimum distance between centers". Введите целое число'
-        error_message_2 = 'Неправильный тип данных в поле "Parameter 1". Введите целое число'
-        error_message_3 = 'Неправильный тип данных в поле "Parameter 2". Введите целое число'
-        error_message_4 = 'Неправильный тип данных в поле "Minimum Search Radius". Введите целое число'
-        error_message_5 = 'Неправильный тип данных в поле "Maximum Search Radius". Введите целое число'
+        error_message_1 = 'Неправильный тип данных в поле "Minimum distance between centers". Введите целое число.'
+        error_message_2 = 'Неправильный тип данных в поле "Parameter 1". Введите целое число.'
+        error_message_3 = 'Неправильный тип данных в поле "Parameter 2". Введите целое число.'
+        error_message_4 = 'Неправильный тип данных в поле "Minimum Search Radius". Введите целое число.'
+        error_message_5 = 'Неправильный тип данных в поле "Maximum Search Radius". Введите целое число.'
+        error_message_6 = 'Введите неотрицательное число в поле "Minimum distance between centers".'
+        error_message_7 = 'Введите неотрицательное число в поле "Parameter 1".'
+        error_message_8 = 'Введите неотрицательное число в поле "Parameter 2".'
+        error_message_9 = 'Введите неотрицательное число в поле "Minimum Search Radius".'
+        error_message_10 = 'Введите неотрицательное число в поле "Maximum Search Radius".'
 
         min_distance_centers_value = self.get_in_parameter(
-            'min_distance_centers_le', error_message_1, messages_for_errors
+            'min_distance_centers_le', error_message_1, error_message_6, messages_for_errors
             )
         parametr1_value = self.get_in_parameter(
-            'parametr_1_le', error_message_2, messages_for_errors
+            'parametr_1_le', error_message_2, error_message_7, messages_for_errors
             )
         parametr2_value = self.get_in_parameter(
-            'parametr_2_le', error_message_3, messages_for_errors
+            'parametr_2_le', error_message_3, error_message_8, messages_for_errors
             )
         min_search_radius_value = self.get_in_parameter(
-            'min_search_radius_le', error_message_4, messages_for_errors
+            'min_search_radius_le', error_message_4, error_message_9, messages_for_errors
             )
         max_search_radius_value = self.get_in_parameter(
-            'max_search_radius_le', error_message_5, messages_for_errors
+            'max_search_radius_le', error_message_5, error_message_10, messages_for_errors
             )
 
         if len(messages_for_errors) == 0:
