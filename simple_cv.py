@@ -55,7 +55,7 @@ def create_stored_mosaic(DTM_input, mosaic_file_name):
 
     # создание shp файла
     # create_shp --> store_shape
-def create_stored_shp(shp_name):
+def create_stored_shp(shp_name, dtm_input):
     driverName = "ESRI Shapefile"
     drv = ogr.GetDriverByName(driverName)
     ogrData = drv.CreateDataSource(shp_name)
