@@ -142,8 +142,9 @@ dmypy.json
 .tfw
 .tif.aux.xml
 .tif.vat.dbf
-.test_images/
+test_images/
 .dbf
 .prj
 .shp
 .shx
+.tfw
