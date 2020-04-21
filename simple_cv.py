@@ -184,8 +184,9 @@ def store_circle(geo_info, crat_layer, circle, crat_id):
 def draw_circles(marked_up_image, circle_list, crat_id):
     for circle in circle_list:
         circle.draw(marked_up_image)
-
-    cv2.imwrite('recognition_examples\\' + 'detected_crat_lap' + str(crat_id) + '.tif', marked_up_image)
+        
+    cv2.imwrite('detected_crat.tif', marked_up_image)
+    # cv2.imwrite('recognition_examples\\' + 'detected_crat_lap' + str(crat_id) + '.tif', marked_up_image)
     cv2.namedWindow('Image', cv2.WINDOW_NORMAL)
     cv2.resizeWindow('Image', 600, 600)
     cv2.imshow('Image', marked_up_image)
@@ -205,7 +206,7 @@ if __name__ == "__main__":
     dtm_input = "C:\\projects\\craters_recognition\\GLD100_test.tif"
     mosaic_file_name = default_mosaic_filename(dtm_input)
     mosaic = create_stored_mosaic(dtm_input, mosaic_file_name)
-    create_stored_shp("crat_circle.shp")
+    create_stored_shp("crat_circle.shp", dtm_input)
     grad = create_gradient(default_mosaic_filename(dtm_input))
     color_image = get_colorized_image(default_mosaic_filename(dtm_input))
     get_stored_info = store_features(dtm_input, detect_craters(grad), shp_name="crat_circle.shp")
