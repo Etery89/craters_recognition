@@ -8,8 +8,12 @@ from simple_cv import create_stored_mosaic
 from simple_cv import create_stored_shp
 from simple_cv import get_colorized_image
 from simple_cv import create_gradient
-from simple_cv import crater_recognition
-from simple_cv import store_marked_up_image
+from simple_cv import detect_craters
+from simple_cv import store_features
+from simple_cv import draw_circles
+
+# from simple_cv import crater_recognition
+# from simple_cv import store_marked_up_image
 
 
 class MyWidget(QtWidgets.QWidget):
@@ -215,22 +219,42 @@ class MyWidget(QtWidgets.QWidget):
                 tiff_filename = self.file_open_le.text()
 
                 create_stored_shp(shp_name=shp_filename, dtm_input=tiff_filename)
-
-                new_marked_up_image = crater_recognition(
-                    dtm_input=tiff_filename,
+                circle_list = detect_craters(
                     gradient_image=gradient_image,
-                    marked_up_image=marked_up_image,
-                    shp_name=shp_filename,
                     cv_start_radius=min_search_radius_value,
                     cv_max_radius=max_search_radius_value,
                     cv_param1=parametr_1_value,
                     cv_param2=parametr_2_value,
                     cv_min_distance=min_distance_centers_value
                 )
-
+                get_stored_info = store_features(
+                    dtm_input=tiff_filename,
+                    circle_list=circle_list,
+                    shp_name=shp_filename
+                )
                 marked_up_image_filename = 'detected_crat.tif'
-                store_marked_up_image(
-                    new_marked_up_image, marked_up_image_filename)
+                draw_circles(
+                    marked_up_image=marked_up_image,
+                    circle_list=circle_list,
+                    crat_id=get_stored_info[0],
+                    marked_up_image_filename=marked_up_image_filename
+                    )
+
+                # new_marked_up_image = crater_recognition(
+                #     dtm_input=tiff_filename,
+                #     gradient_image=gradient_image,
+                #     marked_up_image=marked_up_image,
+                #     shp_name=shp_filename,
+                #     cv_start_radius=min_search_radius_value,
+                #     cv_max_radius=max_search_radius_value,
+                #     cv_param1=parametr_1_value,
+                #     cv_param2=parametr_2_value,
+                #     cv_min_distance=min_distance_centers_value
+                # )
+
+                # marked_up_image_filename = 'detected_crat.tif'
+                # store_marked_up_image(
+                #     new_marked_up_image, marked_up_image_filename)
 
                 self.show_mosaic(marked_up_image_filename)
             else:
