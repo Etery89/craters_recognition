@@ -1,11 +1,8 @@
 import cv2
 import numpy as np
-from matplotlib import pyplot as plt
 import gdal
 import ogr
-import osgeo
 import osgeo.osr as osr
-from osgeo import gdal
 from numpy import gradient
 from numpy import pi
 from numpy import arctan
@@ -13,15 +10,14 @@ from numpy import arctan2
 from numpy import sin
 from numpy import cos
 from numpy import sqrt
-from numpy import zeros
-from numpy import uint8
 
 
 def default_mosaic_filename(dtm_input):
     mosaic_file_name = dtm_input.split('.')[0] + '_mosaic.tif'
     return mosaic_file_name
 
-    # созданиие массива мозаики
+
+# созданиие массива мозаики
 def hillshade(array, azimuth, angle_altitude):
     x, y = gradient(array)
     slope = pi/2. - arctan(sqrt(x*x + y*y))
@@ -30,8 +26,8 @@ def hillshade(array, azimuth, angle_altitude):
     altituderad = angle_altitude*pi / 180.
 
     shaded = sin(altituderad) * sin(slope)\
-    + cos(altituderad) * cos(slope)\
-    * cos(azimuthrad - aspect)
+        + cos(altituderad) * cos(slope)\
+        * cos(azimuthrad - aspect)
     return 255*(shaded + 1)/2
 
 
@@ -53,7 +49,12 @@ def create_stored_mosaic(DTM_input, mosaic_file_name):
             x_mosaic_size = dtm.RasterXSize
             y_mosaic_size = dtm.RasterYSize
             driver = gdal.GetDriverByName('GTiff')
-            mosaic_dataset = driver.Create(mosaic_file_name, x_mosaic_size, y_mosaic_size, 1, gdal.GDT_Byte)
+            mosaic_dataset = driver.Create(
+                mosaic_file_name,
+                x_mosaic_size, y_mosaic_size,
+                1,
+                gdal.GDT_Byte
+                )
 
             mosaic_dataset.SetProjection(dtm_prj)
             mosaic_dataset.GetRasterBand(1).WriteArray(hs_array)
@@ -61,8 +62,7 @@ def create_stored_mosaic(DTM_input, mosaic_file_name):
             return ''
 
 
-    # создание shp файла
-    # create_shp --> store_shape
+# создание shp файла
 def create_stored_shp(shp_name, dtm_input):
     driverName = "ESRI Shapefile"
     drv = ogr.GetDriverByName(driverName)
@@ -85,27 +85,18 @@ def create_stored_shp(shp_name, dtm_input):
     crat_layer.CreateField(ogr.FieldDefn("Longitude", ogr.OFTReal))
 
 
-# image_create --> get_colorized_image
 def get_colorized_image(mosaic_file_path):
     # открытие исходной мозаики
-    # mosaic = dtm_input.split('.')[0] + '_mosaic.tif'
     image = cv2.imread(mosaic_file_path, 0)
-    # image = cv2.GaussianBlur(image, (3, 3), 0)
     marked_up_image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
     return marked_up_image
 
 
-# gradient_create --> create_gradient
 def create_gradient(mosaic_file_path):
     image = cv2.imread(mosaic_file_path, 0)
     # laplasian
     dst = cv2.Laplacian(image, cv2.CV_64F, ksize=3)
     gradient_image = cv2.convertScaleAbs(dst)
-    # # sobel gradient
-    # sobelx = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=5)  # x
-    # sobely = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=5)  # y
-    # gradient_image = cv2.subtract(sobelx, sobely)
-    # gradient_image = cv2.convertScaleAbs(gradient_image)
     return gradient_image
 
 
@@ -120,13 +111,20 @@ class Circle:
         cv2.circle(marked_up_image, (self.x, self.y), 2, (0, 0, 255), 3)
 
 
-# функция обнаружения кратеров и записи результатов в шейп-файл
-def detect_craters(gradient_image, cv_start_radius = 10, cv_max_radius = 100, cv_param1 =  30, cv_param2 = 20, cv_min_distance = 10):
-    # обнаружение кругов
+# обнаружение кругов
+def detect_craters(gradient_image, cv_start_radius=10, cv_max_radius=100, cv_param1=30, cv_param2=20, cv_min_distance=10):
     detect_radius = cv_start_radius
     circle_list = []
     while detect_radius < cv_max_radius:
-        circles = cv2.HoughCircles(gradient_image, cv2.HOUGH_GRADIENT, 1, cv_min_distance, param1=cv_param1, param2=cv_param2, minRadius=(detect_radius), maxRadius=(detect_radius+11))
+        circles = cv2.HoughCircles(
+            gradient_image, cv2.HOUGH_GRADIENT,
+            1,
+            cv_min_distance,
+            param1=cv_param1,
+            param2=cv_param2,
+            minRadius=(detect_radius),
+            maxRadius=(detect_radius+11)
+            )
         detect_radius += 10
         if circles is None:
             continue
@@ -139,11 +137,11 @@ def detect_craters(gradient_image, cv_start_radius = 10, cv_max_radius = 100, cv
 
 def store_features(dtm_input, circle_list, shp_name):
     dtm = gdal.Open(dtm_input)
-    dtm_prj = dtm.GetProjection()
+    dtm.GetProjection()
     band = dtm.GetRasterBand(1)
-    dtm_arr = band.ReadAsArray()
-    x_mosaic_size = dtm.RasterXSize
-    y_mosaic_size = dtm.RasterYSize
+    band.ReadAsArray()
+    dtm.RasterXSize
+    dtm.RasterYSize
     geo_info = dtm.GetGeoTransform()
     assert geo_info[2] == 0
     # открываем шейп-файл
@@ -154,7 +152,6 @@ def store_features(dtm_input, circle_list, shp_name):
     # заносим атрибутивную информацию в слой
     for crat_id, circle in enumerate(circle_list):
         store_circle(geo_info, crat_layer, circle, crat_id)
-    # print(crat_id)
     return (crat_id, geo_info)
 
 
@@ -175,51 +172,26 @@ def store_circle(geo_info, crat_layer, circle, crat_id):
     outFeature = None
 
 
-    # info_name = 'C:\\projects\\craters_recognition\\recognition_examples\\' + shp_name.replace('.shp', 'lap_info') + str(crat_id) + '.txt'
-    # print(info_name)
-    # info = open(info_name, 'w')
-    # info.write('cv_min_distance = ' + str(cv_min_distance) + ' ')
-    # info.write('cv_param1 = ' + str(cv_param1) + ' ')
-    # info.write('cv_param2 = ' + str(cv_param2) + ' ')
-    # info.write('cv_start_radius = ' + str(cv_start_radius) + ' ')
-    # info.write('cv_max_radius = ' + str(cv_max_radius) + ' ')
-    # info.close()
-    # cv2.imwrite('recognition_examples\\' + 'detected_crat_lap' + str(crat_id) + '.tif', marked_up_image)
-    # return marked_up_image
-    # # сохраняет получившееся изображение и открывает его
-
-
 def draw_circles(marked_up_image, circle_list, crat_id, marked_up_image_filename):
     for circle in circle_list:
         circle.draw(marked_up_image)
-        
     cv2.imwrite(marked_up_image_filename, marked_up_image)
-    # cv2.imwrite('recognition_examples\\' + 'detected_crat_lap' + str(crat_id) + '.tif', marked_up_image)
-    # cv2.namedWindow('Image', cv2.WINDOW_NORMAL)
-    # cv2.resizeWindow('Image', 600, 600)
-    # cv2.imshow('Image', marked_up_image)
-    # return marked_up_image
-        # cv2.circle(marked_up_image, (circle.x, circle.y), circle.radius, (0, 255, 0), 2)
-        # cv2.circle(marked_up_image, (circle.x, circle.y), 2, (0, 0, 255), 3)
-
-
-# def store_marked_up_image(marked_up_image):
-#     # cv2.imwrite('detected_crat.tif', marked_up_image)
-#     cv2.namedWindow('Image', cv2.WINDOW_NORMAL)
-#     cv2.resizeWindow('Image', 600, 600)
-#     cv2.imshow('Image', marked_up_image)
 
 
 if __name__ == "__main__":
-    dtm_input = "C:\\projects\\craters_recognition\\GLD100_test.tif"
+    dtm_input = "C:\\projects\\craters_recognition\\test_images\\GLD100_test.tif"
     mosaic_file_name = default_mosaic_filename(dtm_input)
     mosaic = create_stored_mosaic(dtm_input, mosaic_file_name)
     create_stored_shp("crat_circle.shp", dtm_input)
     grad = create_gradient(default_mosaic_filename(dtm_input))
     color_image = get_colorized_image(default_mosaic_filename(dtm_input))
     get_stored_info = store_features(dtm_input, detect_craters(grad), shp_name="crat_circle.shp")
-    draw_circles(color_image, detect_craters(grad), get_stored_info[0])
-    # store_marked_up_image(detect_craters(grad))
-#закрывает все
+    marked_up_image_filename = 'detected_crat.tif'
+    draw_circles(color_image, detect_craters(grad), get_stored_info[0], marked_up_image_filename)
+    cv2.namedWindow('Image', cv2.WINDOW_NORMAL)
+    cv2.resizeWindow('Image', 600, 600)
+    cv2.imshow('Image', color_image)
+
+# закрывает все
 cv2.waitKey(0)
 cv2.destroyAllWindows()

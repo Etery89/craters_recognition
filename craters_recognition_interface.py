@@ -114,26 +114,27 @@ class MyWidget(QtWidgets.QWidget):
     def show_mosaic(self, mosaic_image):
         mosaic_image_pixmap = QtGui.QPixmap(mosaic_image)
         self.image_lb.setPixmap(
-            mosaic_image_pixmap.scaled(720, 920, QtCore.Qt.KeepAspectRatio)
+            mosaic_image_pixmap.scaled(750, 950, QtCore.Qt.KeepAspectRatio)
             )
 
     # File open function
     @Slot()
     def open_tiff_handler(self):
         path_to_file, _ = QtWidgets.QFileDialog.getOpenFileName(
-            self, 'Load Image', os.path.dirname(os.path.abspath(__file__)), 'Images (*.png *.img *.TIF *.TIFF)'
+            self, 'Load Image', os.path.dirname(os.path.abspath(__file__)), 'Images (*.img *.TIF *.TIFF)'
          )
         if path_to_file != '':
             path_to_file_for_wind = QtCore.QDir.toNativeSeparators(path_to_file)
-            print(path_to_file_for_wind)
             self.file_open_le.setText(path_to_file_for_wind)
             tiff_filename = self.file_open_le.text()
-            shp_filename = self.default_shp_filename(tiff_filename)
-            self.choose_shp_file_le.setText(shp_filename)
             self.mosaic_filename = default_mosaic_filename(tiff_filename)
+            # shp_filename = self.default_shp_filename(tiff_filename)
+            # self.choose_shp_file_le.setText(shp_filename)
             msg = create_stored_mosaic(tiff_filename, self.mosaic_filename)
             if msg == '':
                 self.show_mosaic(self.mosaic_filename)
+                shp_filename = self.default_shp_filename(tiff_filename)
+                self.choose_shp_file_le.setText(shp_filename)
                 self.program_message_field.clear()
             else:
                 self.program_message_field.setText(msg)
@@ -240,64 +241,12 @@ class MyWidget(QtWidgets.QWidget):
                     marked_up_image_filename=marked_up_image_filename
                     )
 
-                # new_marked_up_image = crater_recognition(
-                #     dtm_input=tiff_filename,
-                #     gradient_image=gradient_image,
-                #     marked_up_image=marked_up_image,
-                #     shp_name=shp_filename,
-                #     cv_start_radius=min_search_radius_value,
-                #     cv_max_radius=max_search_radius_value,
-                #     cv_param1=parametr_1_value,
-                #     cv_param2=parametr_2_value,
-                #     cv_min_distance=min_distance_centers_value
-                # )
-
-                # marked_up_image_filename = 'detected_crat.tif'
-                # store_marked_up_image(
-                #     new_marked_up_image, marked_up_image_filename)
-
                 self.show_mosaic(marked_up_image_filename)
             else:
                 delimiter = '\n'
                 self.program_message_field.setText(delimiter.join(messages_for_errors))
         except AttributeError:
             self.program_message_field.setText('Не выбран файл для обработки. Пожалуйста, откройте файл.')
-
-
-        # if len(messages_for_errors) == 0:
-        #     self.program_message_field.clear()
-        # else:
-        #     delimiter = '\n'
-        #     self.program_message_field.setText(delimiter.join(messages_for_errors))
-        # try:
-        #     mosaic_filename = self.mosaic_filename
-        #     marked_up_image = get_colorized_image(mosaic_filename)
-        #     gradient_image = create_gradient(mosaic_filename)
-
-        #     shp_filename = self.choose_shp_file_le.text()
-        #     tiff_filename = self.file_open_le.text()
-
-        #     create_stored_shp(shp_name=shp_filename, dtm_input=tiff_filename)
-
-        #     new_marked_up_image = crater_recognition(
-        #         dtm_input=tiff_filename,
-        #         gradient_image=gradient_image,
-        #         marked_up_image=marked_up_image,
-        #         shp_name=shp_filename,
-        #         cv_start_radius=min_search_radius_value,
-        #         cv_max_radius=max_search_radius_value,
-        #         cv_param1=parametr_1_value,
-        #         cv_param2=parametr_2_value,
-        #         cv_min_distance=min_distance_centers_value
-        #     )
-
-        #     marked_up_image_filename = 'detected_crat.tif'
-        #     store_marked_up_image(
-        #         new_marked_up_image, marked_up_image_filename)
-
-        #     self.show_mosaic(marked_up_image_filename)
-        # except AttributeError:
-        #     self.program_message_field.setText('Не выбран файл для обработки. Пожалуйста, откройте файл.')
 
 
 if __name__ == "__main__":
