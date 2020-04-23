@@ -1,11 +1,8 @@
 import cv2
 import numpy as np
-from matplotlib import pyplot as plt
 import gdal
 import ogr
-import osgeo
 import osgeo.osr as osr
-from osgeo import gdal
 from numpy import gradient
 from numpy import pi
 from numpy import arctan
@@ -13,8 +10,6 @@ from numpy import arctan2
 from numpy import sin
 from numpy import cos
 from numpy import sqrt
-from numpy import zeros
-from numpy import uint8
 
 
 def default_mosaic_filename(dtm_input):
@@ -54,8 +49,7 @@ def create_stored_mosaic(DTM_input, mosaic_file_name):
 
 
     # создание shp файла
-    # create_shp --> store_shape
-def create_stored_shp(shp_name):
+def create_stored_shp(shp_name, dtm_input):
     driverName = "ESRI Shapefile"
     drv = ogr.GetDriverByName(driverName)
     ogrData = drv.CreateDataSource(shp_name)
@@ -73,8 +67,9 @@ def create_stored_shp(shp_name):
     fieldDiam.SetWidth(18)
     fieldDiam.SetPrecision(1)
     crat_layer.CreateField(fieldDiam)
-    crat_layer.CreateField(ogr.FieldDefn("Latitude", ogr.OFTReal))
     crat_layer.CreateField(ogr.FieldDefn("Longitude", ogr.OFTReal))
+    crat_layer.CreateField(ogr.FieldDefn("Latitude", ogr.OFTReal))
+    crat_layer.CreateField(ogr.FieldDefn("Depth", ogr.OFTInteger64))
 
 
 # image_create --> get_colorized_image
@@ -113,7 +108,7 @@ class Circle:
 
 
 # функция обнаружения кратеров и записи результатов в шейп-файл
-def detect_craters(gradient_image, cv_start_radius = 10, cv_max_radius = 100, cv_param1 =  30, cv_param2 = 20, cv_min_distance = 10):
+def detect_craters(gradient_image, cv_start_radius=10, cv_max_radius=100, cv_param1=30, cv_param2=20, cv_min_distance=10):
     # обнаружение кругов
     detect_radius = cv_start_radius
     circle_list = []
@@ -131,11 +126,11 @@ def detect_craters(gradient_image, cv_start_radius = 10, cv_max_radius = 100, cv
 
 def store_features(dtm_input, circle_list, shp_name):
     dtm = gdal.Open(dtm_input)
-    dtm_prj = dtm.GetProjection()
     band = dtm.GetRasterBand(1)
     dtm_arr = band.ReadAsArray()
-    x_mosaic_size = dtm.RasterXSize
-    y_mosaic_size = dtm.RasterYSize
+    xsize = dtm.RasterXSize
+    ysize = dtm.RasterYSize
+    print (xsize, ysize)
     geo_info = dtm.GetGeoTransform()
     assert geo_info[2] == 0
     # открываем шейп-файл
@@ -145,14 +140,15 @@ def store_features(dtm_input, circle_list, shp_name):
 
     # заносим атрибутивную информацию в слой
     for crat_id, circle in enumerate(circle_list):
-        store_circle(geo_info, crat_layer, circle, crat_id)
+        store_circle(geo_info, dtm_arr, crat_layer, circle, crat_id)
     # print(crat_id)
-    return (crat_id, geo_info)
+    return crat_id
 
 
-def store_circle(geo_info, crat_layer, circle, crat_id):
+def store_circle(geo_info, dtm_arr, crat_layer, circle, crat_id):
     x_coord = geo_info[0] + float(circle.x) * geo_info[1]
     y_coord = geo_info[3] - float(circle.y) * geo_info[1]
+    depth = int(dtm_arr[int(circle.y)][int(circle.x)])
     pointCoord = [x_coord, y_coord]
     point = ogr.Geometry(ogr.wkbPoint)
     point.AddPoint(pointCoord[0], pointCoord[1])
@@ -161,56 +157,36 @@ def store_circle(geo_info, crat_layer, circle, crat_id):
     outFeature.SetGeometry(point)
     outFeature.SetField(0, crat_id)
     outFeature.SetField(1, float(circle.radius)*2)
-    outFeature.SetField('Latitude', x_coord)
-    outFeature.SetField('Longitude', y_coord)
+    outFeature.SetField('Longitude', x_coord)
+    outFeature.SetField('Latitude', y_coord)
+    outFeature.SetField('Depth', depth)
     crat_layer.CreateFeature(outFeature)
     outFeature = None
 
-
-    # info_name = 'C:\\projects\\craters_recognition\\recognition_examples\\' + shp_name.replace('.shp', 'lap_info') + str(crat_id) + '.txt'
-    # print(info_name)
-    # info = open(info_name, 'w')
-    # info.write('cv_min_distance = ' + str(cv_min_distance) + ' ')
-    # info.write('cv_param1 = ' + str(cv_param1) + ' ')
-    # info.write('cv_param2 = ' + str(cv_param2) + ' ')
-    # info.write('cv_start_radius = ' + str(cv_start_radius) + ' ')
-    # info.write('cv_max_radius = ' + str(cv_max_radius) + ' ')
-    # info.close()
-    # cv2.imwrite('recognition_examples\\' + 'detected_crat_lap' + str(crat_id) + '.tif', marked_up_image)
-    # return marked_up_image
-    # # сохраняет получившееся изображение и открывает его
 
 
 def draw_circles(marked_up_image, circle_list, crat_id):
     for circle in circle_list:
         circle.draw(marked_up_image)
-
-    cv2.imwrite('recognition_examples\\' + 'detected_crat_lap' + str(crat_id) + '.tif', marked_up_image)
+        
+    cv2.imwrite('detected_crat.tif', marked_up_image)
+    # cv2.imwrite('recognition_examples\\' + 'detected_crat_lap' + str(crat_id) + '.tif', marked_up_image)
     cv2.namedWindow('Image', cv2.WINDOW_NORMAL)
     cv2.resizeWindow('Image', 600, 600)
     cv2.imshow('Image', marked_up_image)
-    # return marked_up_image
-        # cv2.circle(marked_up_image, (circle.x, circle.y), circle.radius, (0, 255, 0), 2)
-        # cv2.circle(marked_up_image, (circle.x, circle.y), 2, (0, 0, 255), 3)
-
-
-# def store_marked_up_image(marked_up_image):
-#     # cv2.imwrite('detected_crat.tif', marked_up_image)
-#     cv2.namedWindow('Image', cv2.WINDOW_NORMAL)
-#     cv2.resizeWindow('Image', 600, 600)
-#     cv2.imshow('Image', marked_up_image)
 
 
 if __name__ == "__main__":
     dtm_input = "C:\\projects\\craters_recognition\\GLD100_test.tif"
+    shp_filename = "crat_circle.shp"
     mosaic_file_name = default_mosaic_filename(dtm_input)
     mosaic = create_stored_mosaic(dtm_input, mosaic_file_name)
-    create_stored_shp("crat_circle.shp")
+    create_stored_shp(shp_filename, dtm_input)
     grad = create_gradient(default_mosaic_filename(dtm_input))
     color_image = get_colorized_image(default_mosaic_filename(dtm_input))
-    get_stored_info = store_features(dtm_input, detect_craters(grad), shp_name="crat_circle.shp")
-    draw_circles(color_image, detect_craters(grad), get_stored_info[0])
-    # store_marked_up_image(detect_craters(grad))
-#закрывает все
+    get_stored_info = store_features(dtm_input, detect_craters(grad), shp_filename)
+    draw_circles(color_image, detect_craters(grad), get_stored_info)
+
+# закрывает все
 cv2.waitKey(0)
 cv2.destroyAllWindows()
