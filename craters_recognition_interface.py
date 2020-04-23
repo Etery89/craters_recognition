@@ -128,8 +128,6 @@ class MyWidget(QtWidgets.QWidget):
             self.file_open_le.setText(path_to_file_for_wind)
             tiff_filename = self.file_open_le.text()
             self.mosaic_filename = default_mosaic_filename(tiff_filename)
-            # shp_filename = self.default_shp_filename(tiff_filename)
-            # self.choose_shp_file_le.setText(shp_filename)
             msg = create_stored_mosaic(tiff_filename, self.mosaic_filename)
             if msg == '':
                 self.show_mosaic(self.mosaic_filename)
@@ -138,6 +136,7 @@ class MyWidget(QtWidgets.QWidget):
                 self.program_message_field.clear()
             else:
                 self.program_message_field.setText(msg)
+                self.choose_shp_file_le.clear()
         else:
             self.program_message_field.setText('Вы не выбрали файл.')
 
