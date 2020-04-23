@@ -12,9 +12,6 @@ from simple_cv import detect_craters
 from simple_cv import store_features
 from simple_cv import draw_circles
 
-# from simple_cv import crater_recognition
-# from simple_cv import store_marked_up_image
-
 
 class MyWidget(QtWidgets.QWidget):
 
