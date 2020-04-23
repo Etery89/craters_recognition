@@ -72,12 +72,9 @@ def create_stored_shp(shp_name, dtm_input):
     crat_layer.CreateField(ogr.FieldDefn("Depth", ogr.OFTInteger64))
 
 
-# image_create --> get_colorized_image
 def get_colorized_image(mosaic_file_path):
     # открытие исходной мозаики
-    # mosaic = dtm_input.split('.')[0] + '_mosaic.tif'
     image = cv2.imread(mosaic_file_path, 0)
-    # image = cv2.GaussianBlur(image, (3, 3), 0)
     marked_up_image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
     return marked_up_image
 
@@ -128,9 +125,6 @@ def store_features(dtm_input, circle_list, shp_name):
     dtm = gdal.Open(dtm_input)
     band = dtm.GetRasterBand(1)
     dtm_arr = band.ReadAsArray()
-    xsize = dtm.RasterXSize
-    ysize = dtm.RasterYSize
-    print (xsize, ysize)
     geo_info = dtm.GetGeoTransform()
     assert geo_info[2] == 0
     # открываем шейп-файл
@@ -141,7 +135,6 @@ def store_features(dtm_input, circle_list, shp_name):
     # заносим атрибутивную информацию в слой
     for crat_id, circle in enumerate(circle_list):
         store_circle(geo_info, dtm_arr, crat_layer, circle, crat_id)
-    # print(crat_id)
     return crat_id
 
 
