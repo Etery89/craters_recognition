@@ -32,8 +32,8 @@ def hillshade(array, azimuth, angle_altitude):
 
 
 # функция создает мозаику с использованием исходного геофайла
-def create_stored_mosaic(DTM_input, mosaic_file_name):
-    dtm = gdal.Open(DTM_input)
+def create_stored_mosaic(dtm_input, mosaic_file_name):
+    dtm = gdal.Open(dtm_input)
     dtm_prj = dtm.GetProjection()
     band = dtm.GetRasterBand(1)
     arr = band.ReadAsArray()
@@ -49,7 +49,7 @@ def create_stored_mosaic(DTM_input, mosaic_file_name):
     mosaic_dataset = None
 
 
-    # создание shp файла
+# создание shp файла
 def create_stored_shp(shp_name, dtm_input):
     driverName = "ESRI Shapefile"
     drv = ogr.GetDriverByName(driverName)
@@ -160,20 +160,14 @@ def store_circle(geo_info, dtm_arr, crat_layer, circle, crat_id):
     outFeature = None
 
 
-
-def draw_circles(marked_up_image, circle_list, crat_id):
+def draw_circles(marked_up_image, circle_list, crat_id, marked_up_image_filename):
     for circle in circle_list:
         circle.draw(marked_up_image)
-        
-    cv2.imwrite('detected_crat.tif', marked_up_image)
-    # cv2.imwrite('recognition_examples\\' + 'detected_crat_lap' + str(crat_id) + '.tif', marked_up_image)
-    cv2.namedWindow('Image', cv2.WINDOW_NORMAL)
-    cv2.resizeWindow('Image', 600, 600)
-    cv2.imshow('Image', marked_up_image)
+    cv2.imwrite(marked_up_image_filename, marked_up_image)
 
 
 if __name__ == "__main__":
-    dtm_input = "C:\\projects\\craters_recognition\\GLD100_test.tif"
+    dtm_input = "C:\\projects\\craters_recognition\\test_images\\GLD100_test.tif"
     shp_filename = "crat_circle.shp"
     mosaic_file_name = default_mosaic_filename(dtm_input)
     mosaic = create_stored_mosaic(dtm_input, mosaic_file_name)
@@ -181,7 +175,11 @@ if __name__ == "__main__":
     grad = create_gradient(default_mosaic_filename(dtm_input))
     color_image = get_colorized_image(default_mosaic_filename(dtm_input))
     get_stored_info = store_features(dtm_input, detect_craters(grad), shp_filename)
-    draw_circles(color_image, detect_craters(grad), get_stored_info)
+    marked_up_image_filename = 'detected_crat.tif'
+    draw_circles(color_image, detect_craters(grad), get_stored_info, marked_up_image_filename)
+    cv2.namedWindow('Image', cv2.WINDOW_NORMAL)
+    cv2.resizeWindow('Image', 600, 600)
+    cv2.imshow('Image', color_image)
 
 # закрывает все
 cv2.waitKey(0)
