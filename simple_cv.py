@@ -32,21 +32,34 @@ def hillshade(array, azimuth, angle_altitude):
 
 
 # функция создает мозаику с использованием исходного геофайла
-def create_stored_mosaic(dtm_input, mosaic_file_name):
-    dtm = gdal.Open(dtm_input)
-    dtm_prj = dtm.GetProjection()
-    band = dtm.GetRasterBand(1)
-    arr = band.ReadAsArray()
-    hs_array = hillshade(arr, 180, 90)
+def create_stored_mosaic(DTM_input, mosaic_file_name):
+    dtm = gdal.Open(DTM_input)
+    if dtm is None:
+        return 'Открытый файл не является изображением'
+    else:
+        geo_info = dtm.GetGeoTransform()
+        if geo_info == (0, 1, 0, 0, 0, 1):
+            return 'Открытый файл не является изображением типа geo tiff.'
+        else:
+            dtm_prj = dtm.GetProjection()
+            band = dtm.GetRasterBand(1)
+            arr = band.ReadAsArray()
+            hs_array = hillshade(arr, 180, 90)
 
-    x_mosaic_size = dtm.RasterXSize
-    y_mosaic_size = dtm.RasterYSize
-    driver = gdal.GetDriverByName('GTiff')
-    mosaic_dataset = driver.Create(mosaic_file_name, x_mosaic_size, y_mosaic_size, 1, gdal.GDT_Byte)
+            x_mosaic_size = dtm.RasterXSize
+            y_mosaic_size = dtm.RasterYSize
+            driver = gdal.GetDriverByName('GTiff')
+            mosaic_dataset = driver.Create(
+                mosaic_file_name,
+                x_mosaic_size, y_mosaic_size,
+                1,
+                gdal.GDT_Byte
+                )
 
-    mosaic_dataset.SetProjection(dtm_prj)
-    mosaic_dataset.GetRasterBand(1).WriteArray(hs_array)
-    mosaic_dataset = None
+            mosaic_dataset.SetProjection(dtm_prj)
+            mosaic_dataset.GetRasterBand(1).WriteArray(hs_array)
+            mosaic_dataset = None
+            return ''
 
 
 # создание shp файла
@@ -68,9 +81,8 @@ def create_stored_shp(shp_name, dtm_input):
     fieldDiam.SetWidth(18)
     fieldDiam.SetPrecision(1)
     crat_layer.CreateField(fieldDiam)
-    crat_layer.CreateField(ogr.FieldDefn("Longitude", ogr.OFTReal))
     crat_layer.CreateField(ogr.FieldDefn("Latitude", ogr.OFTReal))
-    crat_layer.CreateField(ogr.FieldDefn("Depth", ogr.OFTInteger64))
+    crat_layer.CreateField(ogr.FieldDefn("Longitude", ogr.OFTReal))
 
 
 def get_colorized_image(mosaic_file_path):
@@ -99,9 +111,8 @@ class Circle:
         cv2.circle(marked_up_image, (self.x, self.y), 2, (0, 0, 255), 3)
 
 
-# функция обнаружения кратеров и записи результатов в шейп-файл
+# обнаружение кругов
 def detect_craters(gradient_image, cv_start_radius=10, cv_max_radius=100, cv_param1=30, cv_param2=20, cv_min_distance=10):
-    # обнаружение кругов
     detect_radius = cv_start_radius
     circle_list = []
     while detect_radius < cv_max_radius:
@@ -126,8 +137,11 @@ def detect_craters(gradient_image, cv_start_radius=10, cv_max_radius=100, cv_par
 
 def store_features(dtm_input, circle_list, shp_name):
     dtm = gdal.Open(dtm_input)
+    dtm.GetProjection()
     band = dtm.GetRasterBand(1)
-    dtm_arr = band.ReadAsArray()
+    band.ReadAsArray()
+    dtm.RasterXSize
+    dtm.RasterYSize
     geo_info = dtm.GetGeoTransform()
     assert geo_info[2] == 0
     # открываем шейп-файл
@@ -137,14 +151,13 @@ def store_features(dtm_input, circle_list, shp_name):
 
     # заносим атрибутивную информацию в слой
     for crat_id, circle in enumerate(circle_list):
-        store_circle(geo_info, dtm_arr, crat_layer, circle, crat_id)
-    return crat_id
+        store_circle(geo_info, crat_layer, circle, crat_id)
+    return (crat_id, geo_info)
 
 
-def store_circle(geo_info, dtm_arr, crat_layer, circle, crat_id):
+def store_circle(geo_info, crat_layer, circle, crat_id):
     x_coord = geo_info[0] + float(circle.x) * geo_info[1]
     y_coord = geo_info[3] - float(circle.y) * geo_info[1]
-    depth = int(dtm_arr[int(circle.y)][int(circle.x)])
     pointCoord = [x_coord, y_coord]
     point = ogr.Geometry(ogr.wkbPoint)
     point.AddPoint(pointCoord[0], pointCoord[1])
@@ -153,9 +166,8 @@ def store_circle(geo_info, dtm_arr, crat_layer, circle, crat_id):
     outFeature.SetGeometry(point)
     outFeature.SetField(0, crat_id)
     outFeature.SetField(1, float(circle.radius)*2)
-    outFeature.SetField('Longitude', x_coord)
-    outFeature.SetField('Latitude', y_coord)
-    outFeature.SetField('Depth', depth)
+    outFeature.SetField('Latitude', x_coord)
+    outFeature.SetField('Longitude', y_coord)
     crat_layer.CreateFeature(outFeature)
     outFeature = None
 
@@ -168,15 +180,14 @@ def draw_circles(marked_up_image, circle_list, crat_id, marked_up_image_filename
 
 if __name__ == "__main__":
     dtm_input = "C:\\projects\\craters_recognition\\test_images\\GLD100_test.tif"
-    shp_filename = "crat_circle.shp"
     mosaic_file_name = default_mosaic_filename(dtm_input)
     mosaic = create_stored_mosaic(dtm_input, mosaic_file_name)
-    create_stored_shp(shp_filename, dtm_input)
+    create_stored_shp("crat_circle.shp", dtm_input)
     grad = create_gradient(default_mosaic_filename(dtm_input))
     color_image = get_colorized_image(default_mosaic_filename(dtm_input))
-    get_stored_info = store_features(dtm_input, detect_craters(grad), shp_filename)
+    get_stored_info = store_features(dtm_input, detect_craters(grad), shp_name="crat_circle.shp")
     marked_up_image_filename = 'detected_crat.tif'
-    draw_circles(color_image, detect_craters(grad), get_stored_info, marked_up_image_filename)
+    draw_circles(color_image, detect_craters(grad), get_stored_info[0], marked_up_image_filename)
     cv2.namedWindow('Image', cv2.WINDOW_NORMAL)
     cv2.resizeWindow('Image', 600, 600)
     cv2.imshow('Image', color_image)
