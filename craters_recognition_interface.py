@@ -70,9 +70,15 @@ class MyWidget(QtWidgets.QWidget):
         self.min_search_radius_le = add_param_to_grid('Minimum Search Radius', '100', parameters_layout, 0, 2)
         self.max_search_radius_le = add_param_to_grid('Maximum Search Radius', '200', parameters_layout, 1, 2)
 
-        # Program message output field
-        self.program_message_field = QtWidgets.QTextEdit('Program messages')
+        # Program message output layout
+        program_message_lb = QtWidgets.QLabel('Program messages')
+        program_message_lb.setFixedSize(100, 15)
+        self.program_message_field = QtWidgets.QTextEdit()
         self.program_message_field.setFixedSize(500, 100)
+
+        program_msg_layout = QtWidgets.QVBoxLayout()
+        program_msg_layout.addWidget(program_message_lb)
+        program_msg_layout.addWidget(self.program_message_field)
 
         # QVBoxLayout "left parth"/"function parth"
         settings_layout = QtWidgets.QVBoxLayout()
@@ -83,7 +89,7 @@ class MyWidget(QtWidgets.QWidget):
         settings_layout.addWidget(self.find_craters_btn)
         settings_layout.addLayout(layout_open_shp_file)
         settings_layout.addWidget(self.calc_additional_parameters_btn)
-        settings_layout.addWidget(self.program_message_field)
+        settings_layout.addLayout(program_msg_layout)
 
         # QHBoxLayout "function part + image parth"
         self.image_lb = QtWidgets.QLabel()
