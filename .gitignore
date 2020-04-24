@@ -148,3 +148,5 @@ test_images/
 .shp
 .shx
 .tfw
+circles_fill.py
+.jpg
