@@ -16,7 +16,8 @@ def default_mosaic_filename(dtm_input):
     mosaic_file_name = dtm_input.split('.')[0] + '_mosaic.tif'
     return mosaic_file_name
 
-    # созданиие массива мозаики
+
+# созданиие массива мозаики
 def hillshade(array, azimuth, angle_altitude):
     x, y = gradient(array)
     slope = pi/2. - arctan(sqrt(x*x + y*y))
@@ -25,8 +26,8 @@ def hillshade(array, azimuth, angle_altitude):
     altituderad = angle_altitude*pi / 180.
 
     shaded = sin(altituderad) * sin(slope)\
-    + cos(altituderad) * cos(slope)\
-    * cos(azimuthrad - aspect)
+        + cos(altituderad) * cos(slope)\
+        * cos(azimuthrad - aspect)
     return 255*(shaded + 1)/2
 
 
@@ -79,17 +80,11 @@ def get_colorized_image(mosaic_file_path):
     return marked_up_image
 
 
-# gradient_create --> create_gradient
 def create_gradient(mosaic_file_path):
     image = cv2.imread(mosaic_file_path, 0)
     # laplasian
     dst = cv2.Laplacian(image, cv2.CV_64F, ksize=3)
     gradient_image = cv2.convertScaleAbs(dst)
-    # # sobel gradient
-    # sobelx = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=5)  # x
-    # sobely = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=5)  # y
-    # gradient_image = cv2.subtract(sobelx, sobely)
-    # gradient_image = cv2.convertScaleAbs(gradient_image)
     return gradient_image
 
 
@@ -110,7 +105,15 @@ def detect_craters(gradient_image, cv_start_radius=10, cv_max_radius=100, cv_par
     detect_radius = cv_start_radius
     circle_list = []
     while detect_radius < cv_max_radius:
-        circles = cv2.HoughCircles(gradient_image, cv2.HOUGH_GRADIENT, 1, cv_min_distance, param1=cv_param1, param2=cv_param2, minRadius=(detect_radius), maxRadius=(detect_radius+11))
+        circles = cv2.HoughCircles(
+            gradient_image, cv2.HOUGH_GRADIENT,
+            1,
+            cv_min_distance,
+            param1=cv_param1,
+            param2=cv_param2,
+            minRadius=(detect_radius),
+            maxRadius=(detect_radius+11)
+            )
         detect_radius += 10
         if circles is None:
             continue
