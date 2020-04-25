@@ -93,11 +93,11 @@ class MyWidget(QtWidgets.QWidget):
 
         # QHBoxLayout "function part + image parth"
         self.image_lb = QtWidgets.QLabel()
-        self.image_lb.setFixedWidth(500)
+        self.image_lb.setFixedWidth(620)
         self.image_lb.setFrameShape(QtWidgets.QFrame.Box)
         self.image_lb.setFrameShadow(QtWidgets.QFrame.Sunken)
         self.image_lb.setLineWidth(4)
-        self.image_lb.setFrameRect(QtCore.QRect(QtCore.QPoint(0, 0), QtCore.QSize(500, 470)))
+        self.image_lb.setFrameRect(QtCore.QRect(QtCore.QPoint(0, 0), QtCore.QSize(620, 470)))
 
         window_layout = QtWidgets.QHBoxLayout()
         window_layout.addLayout(settings_layout)
@@ -117,7 +117,7 @@ class MyWidget(QtWidgets.QWidget):
     def show_mosaic(self, mosaic_image):
         mosaic_image_pixmap = QtGui.QPixmap(mosaic_image)
         self.image_lb.setPixmap(
-            mosaic_image_pixmap.scaled(500, 500, QtCore.Qt.IgnoreAspectRatio)
+            mosaic_image_pixmap.scaled(600, 500, QtCore.Qt.IgnoreAspectRatio)
             )
 
     # File open function
