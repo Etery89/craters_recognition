@@ -117,7 +117,7 @@ class MyWidget(QtWidgets.QWidget):
     def show_mosaic(self, mosaic_image):
         mosaic_image_pixmap = QtGui.QPixmap(mosaic_image)
         self.image_lb.setPixmap(
-            mosaic_image_pixmap.scaled(750, 950, QtCore.Qt.KeepAspectRatio)
+            mosaic_image_pixmap.scaled(500, 500, QtCore.Qt.IgnoreAspectRatio)
             )
 
     # File open function
