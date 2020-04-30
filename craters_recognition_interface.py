@@ -182,6 +182,7 @@ class MyWidget(QtWidgets.QWidget):
 
     @Slot()
     def recognize_and_show_craters(self, mosaic):
+        self.program_message_field.clear()
         messages_for_errors = []
 
         error_message_1 = 'Неправильный тип данных в поле "Minimum distance between centers". Введите целое число.'
