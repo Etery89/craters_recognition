@@ -12,6 +12,8 @@ from simple_cv import detect_craters
 from simple_cv import store_features
 from simple_cv import draw_circles
 
+# from second_button import calculate_dd
+
 
 class MyWidget(QtWidgets.QWidget):
 
@@ -112,6 +114,7 @@ class MyWidget(QtWidgets.QWidget):
         self.file_open_btn.clicked.connect(self.open_tiff_handler)
         self.shp_file_open_btn.clicked.connect(self.open_shp_handler)
         self.find_craters_btn.clicked.connect(self.recognize_and_show_craters)
+        # self.calc_additional_parameters_btn.clicked.connect(self.call_calculate_dd)
 
     # Функция демонстрации мозаики
     def show_mosaic(self, mosaic_image):
@@ -254,6 +257,11 @@ class MyWidget(QtWidgets.QWidget):
                 self.program_message_field.setText(delimiter.join(messages_for_errors))
         except AttributeError:
             self.program_message_field.setText('Не выбран файл для обработки. Пожалуйста, откройте файл.')
+
+    # @Slot()
+    # def call_calculate_dd(self):
+    #     shp_filename = self.shp_file_open_le.text()
+    #     calculate_dd(shp_filename)
 
 
 if __name__ == "__main__":
