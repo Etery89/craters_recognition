@@ -16,6 +16,7 @@ def default_mosaic_filename(dtm_input):
     mosaic_file_name = dtm_input.split('.')[0] + '_mosaic.tif'
     return mosaic_file_name
 
+
     # созданиие массива мозаики
 def hillshade(array, azimuth, angle_altitude):
     x, y = gradient(array)
@@ -33,19 +34,32 @@ def hillshade(array, azimuth, angle_altitude):
 # функция создает мозаику с использованием исходного геофайла
 def create_stored_mosaic(DTM_input, mosaic_file_name):
     dtm = gdal.Open(DTM_input)
-    dtm_prj = dtm.GetProjection()
-    band = dtm.GetRasterBand(1)
-    arr = band.ReadAsArray()
-    hs_array = hillshade(arr, 180, 90)
+    if dtm is None:
+        return 'Открытый файл не является изображением'
+    else:
+        geo_info = dtm.GetGeoTransform()
+        if geo_info == (0, 1, 0, 0, 0, 1):
+            return 'Открытый файл не является изображением типа geo tiff.'
+        else:
+            dtm_prj = dtm.GetProjection()
+            band = dtm.GetRasterBand(1)
+            arr = band.ReadAsArray()
+            hs_array = hillshade(arr, 180, 90)
 
-    x_mosaic_size = dtm.RasterXSize
-    y_mosaic_size = dtm.RasterYSize
-    driver = gdal.GetDriverByName('GTiff')
-    mosaic_dataset = driver.Create(mosaic_file_name, x_mosaic_size, y_mosaic_size, 1, gdal.GDT_Byte)
+            x_mosaic_size = dtm.RasterXSize
+            y_mosaic_size = dtm.RasterYSize
+            driver = gdal.GetDriverByName('GTiff')
+            mosaic_dataset = driver.Create(
+                mosaic_file_name,
+                x_mosaic_size, y_mosaic_size,
+                1,
+                gdal.GDT_Byte
+                )
 
-    mosaic_dataset.SetProjection(dtm_prj)
-    mosaic_dataset.GetRasterBand(1).WriteArray(hs_array)
-    mosaic_dataset = None
+            mosaic_dataset.SetProjection(dtm_prj)
+            mosaic_dataset.GetRasterBand(1).WriteArray(hs_array)
+            mosaic_dataset = None
+            return ''
 
 
     # создание shp файла
@@ -67,10 +81,104 @@ def create_stored_shp(shp_name, dtm_input):
     fieldDiam.SetWidth(18)
     fieldDiam.SetPrecision(1)
     crat_layer.CreateField(fieldDiam)
+    crat_layer.CreateField(ogr.FieldDefn("Radius", ogr.OFTReal))
     crat_layer.CreateField(ogr.FieldDefn("Longitude", ogr.OFTReal))
     crat_layer.CreateField(ogr.FieldDefn("Latitude", ogr.OFTReal))
     crat_layer.CreateField(ogr.FieldDefn("Depth", ogr.OFTInteger64))
 
+
+def bresenham_circle(x0, y0, radius):
+    switch = 3 - (2 * radius)
+    points = set()
+    x = 0
+    y = radius
+    # first quarter/octant starts clockwise at 12 o'clock
+    while x <= y:
+        # first quarter first octant
+        points.add((int(x0+x), int(y0+y)))
+        # first quarter 2nd octant
+        points.add((int(x0-x), int(y0+y)))
+        # second quarter 3rd octant
+        points.add((int(x0+x), int(y0-y)))
+        # second quarter 4.octant
+        points.add((int(x0-x), int(y0-y)))
+        # third quarter 5.octant
+        points.add((int(x0+y), int(y0+x)))
+        # third quarter 6.octant
+        points.add((int(x0-y), int(y0+x)))
+        # fourth quarter 7.octant
+        points.add((int(x0+y), int(y0-x)))
+        # fourth quarter 8.octant
+        points.add((int(x0-y), int(y0-x)))
+        if switch < 0:
+            switch = switch + (4 * x) + 6
+        else:
+            switch = switch + (4 * (x - y)) + 10
+            y = y - 1
+        x = x + 1
+    return points
+
+
+# find mean z for 4 circles of different radius
+def store_normal_mean(x, y, pixel_radius, dtm_arr):
+
+    # circle with basic radius
+    normal_circle = bresenham_circle(x0=x, y0=y, radius=pixel_radius)
+    norm_circle_list = []
+    for point in normal_circle:
+        try:
+            norm_circle_list.append(dtm_arr[point[1]][point[0]])            
+        except IndexError:
+            continue
+    norm_mean = sum(norm_circle_list) / len(norm_circle_list)
+    return norm_mean
+
+
+def store_small_mean(x, y, pixel_radius, dtm_arr):
+    # circle with small radius
+    small_circle = bresenham_circle(x0=x, y0=y, radius=pixel_radius - (pixel_radius / 100 * 20))
+    small_circle_list = []
+    for point in small_circle:
+        try:
+            small_circle_list.append(dtm_arr[point[1]][point[0]])
+        except IndexError:
+            continue
+    small_mean = sum(small_circle_list) / len(small_circle_list)
+    return small_mean
+
+
+def store_surface_height(x, y, pixel_radius, dtm_arr):
+    # circle with 30% bigger radius
+    big_circle = bresenham_circle(x0=x, y0=y, radius=pixel_radius + pixel_radius / 100 * 30)
+    big_circle_list = []
+    for point in big_circle:
+        try:
+            big_circle_list.append(dtm_arr[point[1]][point[0]])
+        except IndexError:
+            continue
+    big_mean = sum(big_circle_list) / len(big_circle_list)
+
+    # circle with double radius
+    bigger_circle = bresenham_circle(x0=x, y0=y, radius=pixel_radius * 2)
+    bigger_circle_list = []
+    for point in bigger_circle:
+        try:
+            bigger_circle_list.append(dtm_arr[point[1]][point[0]])
+        except IndexError:
+            continue
+    bigger_mean = sum(bigger_circle_list) / len(bigger_circle_list)
+
+    # circle with triple radius
+    even_bigger_circle = bresenham_circle(x0=x, y0=y, radius=pixel_radius * 3)
+    even_bigger_circle_list = []
+    for point in even_bigger_circle:
+        try:
+            even_bigger_circle_list.append(dtm_arr[point[1]][point[0]])
+        except IndexError:
+            continue
+    even_bigger_mean = sum(even_bigger_circle_list) / len(even_bigger_circle_list)
+    surface_height = (big_mean + bigger_mean + even_bigger_mean) / 3
+    return surface_height
 
 def get_colorized_image(mosaic_file_path):
     # открытие исходной мозаики
@@ -79,17 +187,11 @@ def get_colorized_image(mosaic_file_path):
     return marked_up_image
 
 
-# gradient_create --> create_gradient
 def create_gradient(mosaic_file_path):
     image = cv2.imread(mosaic_file_path, 0)
     # laplasian
     dst = cv2.Laplacian(image, cv2.CV_64F, ksize=3)
     gradient_image = cv2.convertScaleAbs(dst)
-    # # sobel gradient
-    # sobelx = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=5)  # x
-    # sobely = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=5)  # y
-    # gradient_image = cv2.subtract(sobelx, sobely)
-    # gradient_image = cv2.convertScaleAbs(gradient_image)
     return gradient_image
 
 
@@ -131,54 +233,65 @@ def store_features(dtm_input, circle_list, shp_name):
     driver = ogr.GetDriverByName('ESRI Shapefile')
     dataSource = driver.Open(shp_name, 1)
     crat_layer = dataSource.GetLayer()
-
+    confirm_stage_1st_list = []
     # заносим атрибутивную информацию в слой
     for crat_id, circle in enumerate(circle_list):
-        store_circle(geo_info, dtm_arr, crat_layer, circle, crat_id)
+        store_circle(geo_info, dtm_arr, crat_layer, circle, crat_id, confirm_stage_1st_list)
     return crat_id
 
 
-def store_circle(geo_info, dtm_arr, crat_layer, circle, crat_id):
-    x_coord = geo_info[0] + float(circle.x) * geo_info[1]
-    y_coord = geo_info[3] - float(circle.y) * geo_info[1]
-    depth = int(dtm_arr[int(circle.y)][int(circle.x)])
-    pointCoord = [x_coord, y_coord]
-    point = ogr.Geometry(ogr.wkbPoint)
-    point.AddPoint(pointCoord[0], pointCoord[1])
-    featureDefn = crat_layer.GetLayerDefn()
-    outFeature = ogr.Feature(featureDefn)
-    outFeature.SetGeometry(point)
-    outFeature.SetField(0, crat_id)
-    outFeature.SetField(1, float(circle.radius)*2)
-    outFeature.SetField('Longitude', x_coord)
-    outFeature.SetField('Latitude', y_coord)
-    outFeature.SetField('Depth', depth)
-    crat_layer.CreateFeature(outFeature)
-    outFeature = None
+def store_circle(geo_info, dtm_arr, crat_layer, circle, crat_id, confirm_stage_1st_list):
 
+    # получаем средние высоты кругов
+    normal_z = store_normal_mean(circle.x, circle.y, circle.radius, dtm_arr)
+    inner_z = store_small_mean(circle.x, circle.y, circle.radius, dtm_arr)
+    surface_z = store_surface_height(circle.x, circle.y, circle.radius, dtm_arr)
+    abs_depth = int(dtm_arr[int(circle.y)][int(circle.x)])
+    # проверяем, подходящие высоты для кратера или нет
+    if normal_z > inner_z and inner_z > abs_depth and (normal_z < surface_z + surface_z * 0.05 or normal_z > surface_z - surface_z * 0.05):
+        crat =[circle.x, circle.y, circle.radius]
+        confirm_stage_1st_list.append(crat)
+        x_coord = geo_info[0] + float(circle.x) * geo_info[1]
+        y_coord = geo_info[3] - float(circle.y) * geo_info[1]
+        depth = surface_z - abs_depth
+        pointCoord = [x_coord, y_coord]
+        point = ogr.Geometry(ogr.wkbPoint)
+        point.AddPoint(pointCoord[0], pointCoord[1])
+        featureDefn = crat_layer.GetLayerDefn()
+        outFeature = ogr.Feature(featureDefn)
+        outFeature.SetGeometry(point)
+        outFeature.SetField(0, crat_id)
+        outFeature.SetField(1, float((circle.radius)*2*geo_info[1]))
+        outFeature.SetField('Radius', float((circle.radius)*geo_info[1]))
+        outFeature.SetField('Longitude', x_coord)
+        outFeature.SetField('Latitude', y_coord)
+        outFeature.SetField('Depth', depth)
+        crat_layer.CreateFeature(outFeature)
+        outFeature = None
 
+# def store_confirmed_circle(confirm_stage_1st_list):
+#     for conf_circle in confirm_stage_1st_list:
+#         if conf_circle = 
 
 def draw_circles(marked_up_image, circle_list, crat_id):
     for circle in circle_list:
         circle.draw(marked_up_image)
-        
     cv2.imwrite('detected_crat.tif', marked_up_image)
-    # cv2.imwrite('recognition_examples\\' + 'detected_crat_lap' + str(crat_id) + '.tif', marked_up_image)
-    cv2.namedWindow('Image', cv2.WINDOW_NORMAL)
-    cv2.resizeWindow('Image', 600, 600)
-    cv2.imshow('Image', marked_up_image)
 
 
 if __name__ == "__main__":
     dtm_input = "C:\\projects\\craters_recognition\\GLD100_test.tif"
-    shp_filename = "crat_circle.shp"
     mosaic_file_name = default_mosaic_filename(dtm_input)
     mosaic = create_stored_mosaic(dtm_input, mosaic_file_name)
-    create_stored_shp(shp_filename, dtm_input)
+    create_stored_shp("crat_circle.shp", dtm_input)
     grad = create_gradient(default_mosaic_filename(dtm_input))
     color_image = get_colorized_image(default_mosaic_filename(dtm_input))
-    get_stored_info = store_features(dtm_input, detect_craters(grad), shp_filename)
+    get_stored_info = store_features(dtm_input, detect_craters(grad), shp_name="crat_circle.shp")
+    marked_up_image_filename = 'detected_crat.tif'
     draw_circles(color_image, detect_craters(grad), get_stored_info)
+    cv2.namedWindow('Image', cv2.WINDOW_NORMAL)
+    cv2.resizeWindow('Image', 600, 600)
+    cv2.imshow('Image', color_image)
 
 # закрывает все
 cv2.waitKey(0)
